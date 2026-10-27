@@ -72,6 +72,9 @@ const DEFAULT_SERVICES = [
   }
 ];
 
+const DEFAULT_AVAILABLE_DAYS = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+const DEFAULT_AVAILABLE_TIMES = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"];
+
 const DEFAULT_ADS = {
   header: {
     enabled: true,
@@ -247,22 +250,8 @@ function renderBarbers() {
             <span class="meta-pill">🕒 ${barber.workingHours}</span>
           </div>
 
-          ${Array.isArray(barber.hairstyles) && barber.hairstyles.length ? `
-            <div style="margin:12px 0; padding:10px; background:#11141d; border-radius:10px; border:1px solid #272c3d;">
-              <div style="font-size:.78rem; color:#fbbf24; font-weight:800; margin-bottom:7px;">تسريحات وأسعار الحلاق</div>
-              <div style="display:grid; gap:5px;">
-                ${barber.hairstyles.slice(0, 5).map(style => `<div style="display:flex; justify-content:space-between; gap:8px; font-size:.78rem; color:#d4d4d8;"><span>${style.name}</span><strong style="color:#fcd34d; white-space:nowrap;">${style.price} دج</strong></div>`).join('')}
-              </div>
-            </div>
-          ` : ''}
-
-          ${Array.isArray(barber.portfolio) && barber.portfolio.length ? `
-            <div style="display:flex; gap:5px; overflow:hidden; margin:10px 0;">
-              ${barber.portfolio.slice(0, 4).map(image => `<img src="${image.url}" alt="من أعمال ${barber.name}" loading="lazy" style="width:54px; height:54px; object-fit:cover; border-radius:7px; border:1px solid #3f465d;">`).join('')}
-            </div>
-          ` : ''}
-
           <div class="barber-actions">
+            <button type="button" class="btn-secondary w-full view-barber-profile-btn" data-barber-id="${barber.id}" style="margin-bottom:8px;">عرض التسريحات والأوقات</button>
             <button 
               type="button" 
               class="btn-primary w-full book-with-barber-btn"
@@ -285,6 +274,37 @@ function renderBarbers() {
       openBookingModal(barberId);
     });
   });
+
+  $$(".view-barber-profile-btn").forEach(btn => {
+    btn.addEventListener("click", () => openBarberProfile(btn.getAttribute("data-barber-id")));
+  });
+
+  $$("#barbers-grid .barber-card").forEach(card => {
+    card.addEventListener("click", (event) => {
+      if (!event.target.closest("button, a")) openBarberProfile(card.dataset.id);
+    });
+  });
+}
+
+function openBarberProfile(barberId) {
+  const barber = State.barbers.find((item) => item.id === barberId);
+  if (!barber) return;
+  const publicName = barber.displayName || barber.name;
+  const publicRole = barber.displayRole || barber.role;
+  const image = barber.profileImage || barber.image;
+  $("#profile-modal-image").src = image;
+  $("#profile-modal-image").alt = publicName;
+  $("#profile-modal-name").textContent = publicName;
+  $("#profile-modal-role").textContent = publicRole;
+  $("#profile-modal-days").innerHTML = (barber.availableDays || DEFAULT_AVAILABLE_DAYS).map(day => `<span style="background:#1e293b; color:#bae6fd; padding:4px 7px; border-radius:6px; font-size:.72rem;">${day}</span>`).join("");
+  $("#profile-modal-times").innerHTML = (barber.availableTimes || DEFAULT_AVAILABLE_TIMES).map(time => `<span style="background:#3b2f13; color:#fde68a; padding:4px 7px; border-radius:6px; font-size:.72rem;">${time}</span>`).join("");
+  const styles = Array.isArray(barber.hairstyles) ? barber.hairstyles : [];
+  $("#profile-modal-hairstyles").innerHTML = styles.length ? styles.map(style => `<div style="display:flex; justify-content:space-between; background:#11141d; border:1px solid #272c3d; border-radius:8px; padding:9px 11px; color:#e4e4e7;"><span>${style.name}</span><strong style="color:#fcd34d;">${style.price} دج</strong></div>`).join("") : `<div class="empty-state">لم يضف الحلاق تسريحاته وأسعاره بعد.</div>`;
+  $("#profile-modal-book-btn").onclick = () => {
+    closeModal("#modal-barber-profile");
+    openBookingModal(barber.id);
+  };
+  openModal("#modal-barber-profile");
 }
 
 // Render Services List

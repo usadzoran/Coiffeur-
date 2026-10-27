@@ -466,6 +466,38 @@
       </div>
     </div>
 
+    <!-- MODAL: BARBER PUBLIC PROFILE -->
+    <div id="modal-barber-profile" class="modal-backdrop">
+      <div class="modal-card" style="max-width:680px;">
+        <div class="modal-header">
+          <h3 class="modal-title"><span>💈 ملف الحلاق</span></h3>
+          <button type="button" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div style="display:flex; align-items:center; gap:14px; margin-bottom:18px;">
+            <img id="profile-modal-image" src="" alt="" style="width:86px; height:86px; border-radius:16px; object-fit:cover; border:2px solid #f59e0b;">
+            <div>
+              <h3 id="profile-modal-name" style="margin:0 0 4px; color:#fff; font-size:1.3rem;"></h3>
+              <p id="profile-modal-role" style="margin:0; color:#fbbf24; font-size:.88rem;"></p>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
+            <div style="background:#11141d; border:1px solid #2d3345; border-radius:12px; padding:12px;">
+              <strong style="display:block; color:#fbbf24; font-size:.82rem; margin-bottom:7px;">الأيام المتاحة</strong>
+              <div id="profile-modal-days" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
+            </div>
+            <div style="background:#11141d; border:1px solid #2d3345; border-radius:12px; padding:12px;">
+              <strong style="display:block; color:#fbbf24; font-size:.82rem; margin-bottom:7px;">الأوقات المتاحة</strong>
+              <div id="profile-modal-times" style="display:flex; flex-wrap:wrap; gap:5px;"></div>
+            </div>
+          </div>
+          <h4 style="color:#fff; margin:0 0 8px;">التسريحات والأسعار</h4>
+          <div id="profile-modal-hairstyles" style="display:grid; gap:7px; margin-bottom:20px;"></div>
+          <button type="button" id="profile-modal-book-btn" class="btn-primary w-full" style="padding:13px; border-radius:10px;">احجز مع هذا الحلاق</button>
+        </div>
+      </div>
+    </div>
+
     <!-- MODAL: CLIENT APPOINTMENTS LOOKUP -->
     <div id="modal-lookup" class="modal-backdrop">
       <div class="modal-card">
