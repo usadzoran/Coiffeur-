@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <title>صالون المقص الذهبي - بن فريحة وهران</title>
     <meta name="description" content="منصة حلاقة عصرية متكاملة في بن فريحة بوهران تضم ٣ حلاقين محترفين لحجز المواعيد باليوم والوقت وإدارتها وقبولها فورياً." />
     <meta property="og:title" content="صالون المقص الذهبي - بن فريحة وهران" />
@@ -11,11 +11,754 @@
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
   </head>
-  <body class="bg-neutral-950 text-neutral-100 font-sans antialiased selection:bg-amber-600 selection:text-white">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+  <body>
+    <!-- Site Header -->
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand-wrap">
+          <div class="brand-logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="6" cy="6" r="3"/>
+              <path d="M8.12 8.12 12 12"/>
+              <path d="M20 4 8.12 15.88"/>
+              <circle cx="6" cy="18" r="3"/>
+              <path d="M14.8 14.8 20 20"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1>صالون المقص الذهبي</h1>
+            <span>بن فريحة - وهران</span>
+          </div>
+        </div>
+
+        <nav>
+          <ul class="nav-links">
+            <li><a href="#hero" class="nav-link">الرئيسية</a></li>
+            <li><a href="#barbers" class="nav-link">الحلاقين (٣)</a></li>
+            <li><a href="#services" class="nav-link">الخدمات والأسعار</a></li>
+            <li><a href="#location" class="nav-link">الموقع والخريطة</a></li>
+            <li><button type="button" id="nav-lookup-btn" class="nav-link" style="background:none;border:none;cursor:pointer;">حجوزاتي</button></li>
+            <li><button type="button" id="nav-barber-login-btn" class="nav-link" style="background:none;border:none;cursor:pointer;">دخول الحلاقين</button></li>
+          </ul>
+        </nav>
+
+        <div class="header-actions">
+          <button type="button" id="nav-owner-btn" class="btn-xs" title="بوابة صاحب الصالون">
+            ⚙️ إدارة الصالون
+          </button>
+          <button type="button" id="nav-book-btn" class="btn-primary btn-sm">
+            <span>احجز الآن</span>
+          </button>
+          <button type="button" id="mobile-menu-toggle" class="menu-toggle-btn" aria-label="فتح القائمة">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" x2="20" y1="12" y2="12"/>
+              <line x1="4" x2="20" y1="6" y2="6"/>
+              <line x1="4" x2="20" y1="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Nav Drawer -->
+    <div id="mobile-nav-drawer" class="mobile-nav-drawer">
+      <div class="brand-text" style="padding-bottom:12px;border-bottom:1px solid #232732;">
+        <h2 style="font-size:1.1rem;color:#fff;">صالون المقص الذهبي</h2>
+        <span style="color:#f59e0b;font-size:0.8rem;">بن فريحة، وهران</span>
+      </div>
+      <div class="drawer-links">
+        <a href="#hero" class="drawer-link">🏠 الرئيسية</a>
+        <a href="#barbers" class="drawer-link">✂️ الحلاقين الـ ٣</a>
+        <a href="#services" class="drawer-link">💈 قائمة الخدمات والأسعار</a>
+        <a href="#location" class="drawer-link">📍 الموقع وخريطة الطريق</a>
+        <button type="button" onclick="openModal('#modal-lookup')" class="drawer-link" style="text-align:right;cursor:pointer;">🔍 متابعة حجوزاتي</button>
+        <button type="button" onclick="openModal('#modal-barber-login')" class="drawer-link" style="text-align:right;cursor:pointer;">👤 دخول الحلاقين</button>
+        <button type="button" onclick="checkOwnerAccess()" class="drawer-link" style="text-align:right;cursor:pointer;color:#f59e0b;">⚙️ لوحة صاحب الصالون</button>
+      </div>
+    </div>
+
+    <!-- Ad Slot: Header Top -->
+    <div class="container">
+      <div id="ad-slot-header" class="ad-slot-container"></div>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero-section">
+      <div class="hero-backdrop-glow"></div>
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <div class="hero-pill-badge">
+            <span>💈 الحلاقة العصرية الأرقى في وهران</span>
+          </div>
+          <h2 class="hero-title">
+            فن الحلاقة الفاخرة<br>
+            في قلب <span class="hero-title-highlight">بن فريحة، وهران</span>
+          </h2>
+          <p class="hero-desc">
+            مرحباً بك في صالون المقص الذهبي. اختر حلاقك المفضل من بين طاقمنا المحترف، حدد اليوم والوقت المناسب لك، وسيتولى الحلاق مراجعة وقبول موعدك فوراً وبدون أي انتظار.
+          </p>
+
+          <div class="hero-cta-group">
+            <button type="button" id="open-booking-hero-btn" class="btn-primary">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                <line x1="16" x2="16" y1="2" y2="6"/>
+                <line x1="8" x2="8" y1="2" y2="6"/>
+                <line x1="3" x2="21" y1="10" y2="10"/>
+              </svg>
+              <span>احجز موعدك الآن</span>
+            </button>
+            <a href="#location" class="btn-secondary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span>الموقع على الخريطة</span>
+            </a>
+            <button type="button" onclick="openModal('#modal-lookup')" class="btn-outline-gold">
+              <span>تتبع موعدي 🔍</span>
+            </button>
+          </div>
+
+          <div class="hero-stats-row">
+            <div class="stat-item">
+              <span class="stat-num">٣</span>
+              <span class="stat-label">حلاقين محترفين</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-num">+١٠</span>
+              <span class="stat-label">سنوات خبرة</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-num">١٠٠٪</span>
+              <span class="stat-label">حجز مسبق دقيق</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-num">٤.٩★</span>
+              <span class="stat-label">رضا الزبائن</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-image-card">
+          <img 
+            src="./public/images/hero_barbershop_1792939476848.jpg" 
+            alt="صالون المقص الذهبي بن فريحة" 
+            class="hero-main-img"
+            onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=800&q=80';"
+          />
+          <div class="hero-floating-badge">
+            <div>
+              <div class="badge-text-title">صالون المقص الذهبي</div>
+              <div class="badge-text-sub">بن فريحة، دائرة قديل، ولاية وهران</div>
+            </div>
+            <a href="https://maps.app.goo.gl/ffo11T6RT3GXEPrj7" target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm">
+              الاتجاهات 📍
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Barbers Section -->
+    <section id="barbers" class="barbers-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">طاقم العمل المتميز</span>
+          <h2 class="section-title">حلاقو صالون المقص الذهبي</h2>
+          <p class="section-desc">
+            ٣ حلاقين خبراء في بن فريحة بوهران، لكل حلاق أسلوبه الخاص وإدارته لمواعيد زبائنه باليوم والوقت. اختر الحلاق واحجز موعدك فوراً.
+          </p>
+        </div>
+
+        <div id="barbers-grid" class="barbers-grid">
+          <!-- Populated by app.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Ad Slot: Middle In-Content -->
+    <div class="container">
+      <div id="ad-slot-middle" class="ad-slot-container"></div>
+    </div>
+
+    <!-- Services Section -->
+    <section id="services" class="services-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">قائمة الأسعار والخدمات</span>
+          <h2 class="section-title">خدمات حلاقة وتجميل متكاملة</h2>
+          <p class="section-desc">
+            أسعار واضحة ومناسبة بالدينار الجزائري، مع أفضل المنتجات وأعلى معايير النظافة والتعقيم في بن فريحة.
+          </p>
+        </div>
+
+        <div id="services-grid" class="services-grid">
+          <!-- Populated by app.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Location & Contact Section -->
+    <section id="location" class="location-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">زورونا في الصالون</span>
+          <h2 class="section-title">موقعنا في بن فريحة، وهران</h2>
+          <p class="section-desc">
+            موقع يسهل الوصول إليه في بن فريحة مع توفر مواقف سيارات مريحة واستقبال رحب لجميع الزبائن.
+          </p>
+        </div>
+
+        <div class="location-grid">
+          <div class="location-info-card">
+            <div class="location-item">
+              <div class="location-item-icon">📍</div>
+              <div class="location-item-content">
+                <h4>العنوان الدقيق</h4>
+                <p>صالون المقص الذهبي، بالقرب من الطريق الوطني، بلدية بن فريحة، دائرة قديل، ولاية وهران</p>
+              </div>
+            </div>
+
+            <div class="location-item">
+              <div class="location-item-icon">⏰</div>
+              <div class="location-item-content">
+                <h4>أوقات العمل</h4>
+                <p>السبت - الخميس: من 09:00 صباحاً إلى 22:00 مساءً</p>
+                <p>يوم الجمعة: من 14:00 ظهراً إلى 22:00 مساءً</p>
+              </div>
+            </div>
+
+            <div class="location-item">
+              <div class="location-item-icon">📞</div>
+              <div class="location-item-content">
+                <h4>أرقام التواصل السريع</h4>
+                <p>الهاتف: <a href="tel:0555123456" class="text-gold">0555 12 34 56</a></p>
+                <p>واتساب: <a href="https://wa.me/213555123456" target="_blank" rel="noopener noreferrer" class="text-gold">0555 12 34 56 (دردشة مباشرة)</a></p>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px;">
+              <a href="https://maps.app.goo.gl/ffo11T6RT3GXEPrj7" target="_blank" rel="noopener noreferrer" class="btn-primary">
+                <span>فتح في خرائط Google 🗺️</span>
+              </a>
+              <a href="tel:0555123456" class="btn-secondary">
+                <span>اتصال هاتفي 📞</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="map-embed-card">
+            <iframe 
+              class="map-embed-iframe"
+              src="https://maps.google.com/maps?q=Ben%20Freha%2C%20Oran&t=&z=14&ie=UTF8&iwloc=&output=embed"
+              allowfullscreen="" 
+              loading="lazy" 
+              referrerpolicy="no-referrer-when-downgrade"
+              title="خريطة موقع صالون بن فريحة وهران">
+            </iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ad Slot: Footer -->
+    <div class="container">
+      <div id="ad-slot-footer" class="ad-slot-container"></div>
+    </div>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="brand-wrap">
+              <div class="brand-logo-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/></svg>
+              </div>
+              <div class="brand-text">
+                <h3 style="font-size:1.1rem;color:#fff;">صالون المقص الذهبي</h3>
+                <span style="color:#f59e0b;font-size:0.75rem;">بن فريحة - وهران</span>
+              </div>
+            </div>
+            <p>
+              أفضل تجربة حلاقة رجالية وعناية متكاملة في ولاية وهران. نضمن لك الدقة في المواعيد، الاحترافية العالية، والنظافة التامة مع ٣ حلاقين معتمدين.
+            </p>
+          </div>
+
+          <div class="footer-col">
+            <h4>روابط سريعة</h4>
+            <ul class="footer-links">
+              <li><a href="#hero">الرئيسية</a></li>
+              <li><a href="#barbers">الحلاقون الـ ٣</a></li>
+              <li><a href="#services">الخدمات والأسعار</a></li>
+              <li><a href="#location">خريطة الموقع في بن فريحة</a></li>
+              <li><a href="javascript:void(0)" onclick="openModal('#modal-lookup')">الاستعلام عن حجز</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4>منطقة الطاقم والإدارة</h4>
+            <ul class="footer-links">
+              <li><a href="javascript:void(0)" onclick="openModal('#modal-barber-login')">🔐 دخول الحلاقين (كريم، يوسف، سامي)</a></li>
+              <li><a href="javascript:void(0)" id="footer-owner-btn">⚙️ رابط صاحب الصالون (إضافة حلاقين وإعلانات)</a></li>
+              <li><a href="https://maps.app.goo.gl/ffo11T6RT3GXEPrj7" target="_blank" rel="noopener noreferrer">📍 اتجاهات Google Maps</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <div>
+            جميع الحقوق محفوظة © <span id="current-year">2026</span> صالون المقص الذهبي - بن فريحة، وهران
+          </div>
+          <div style="display:flex; align-items:center; gap:16px;">
+            <a href="https://maps.app.goo.gl/ffo11T6RT3GXEPrj7" target="_blank" rel="noopener noreferrer" style="color:#f59e0b;">موقعنا على الخريطة</a>
+            <a href="tel:0555123456" style="color:#f59e0b;">0555 12 34 56</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Bottom Mobile Nav Bar (Fixed on Phones) -->
+    <div class="bottom-nav-bar">
+      <button type="button" id="mob-nav-home" class="bottom-nav-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>الرئيسية</span>
+      </button>
+
+      <button type="button" id="mob-nav-barbers" class="bottom-nav-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/></svg>
+        <span>الحلاقين</span>
+      </button>
+
+      <button type="button" id="mob-nav-book" class="bottom-nav-item bottom-nav-book-btn" aria-label="حجز موعد">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+      </button>
+
+      <button type="button" id="mob-nav-lookup" class="bottom-nav-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <span>حجوزاتي</span>
+      </button>
+
+      <button type="button" id="mob-nav-barber" class="bottom-nav-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>الحلاق</span>
+      </button>
+    </div>
+
+    <!-- MODAL: BOOKING -->
+    <div id="modal-booking" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">
+            <span>📅 حجز موعد جديد في الصالون</span>
+          </h3>
+          <button type="button" class="modal-close-btn">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div id="booking-form-wrap">
+            <form id="booking-form">
+              <div class="form-group">
+                <label class="form-label" for="booking-barber-select">اختر الحلاق:</label>
+                <select id="booking-barber-select" class="form-select">
+                  <!-- Populated by app.js -->
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="booking-service-select">الخدمة المطلوبة:</label>
+                <select id="booking-service-select" class="form-select" required>
+                  <!-- Populated by app.js -->
+                </select>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="booking-date-input">تاريخ الموعد:</label>
+                  <input type="date" id="booking-date-input" class="form-input" required />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="booking-time-select">توقيت الموعد:</label>
+                  <select id="booking-time-select" class="form-select" required>
+                    <option value="">اختر الساعة...</option>
+                    <option value="09:00">09:00 صباحاً</option>
+                    <option value="09:30">09:30 صباحاً</option>
+                    <option value="10:00">10:00 صباحاً</option>
+                    <option value="10:30">10:30 صباحاً</option>
+                    <option value="11:00">11:00 صباحاً</option>
+                    <option value="11:30">11:30 صباحاً</option>
+                    <option value="14:00">02:00 ظهراً</option>
+                    <option value="14:30">02:30 ظهراً</option>
+                    <option value="15:00">03:00 مساءً</option>
+                    <option value="15:30">03:30 مساءً</option>
+                    <option value="16:00">04:00 مساءً</option>
+                    <option value="16:30">04:30 مساءً</option>
+                    <option value="17:00">05:00 مساءً</option>
+                    <option value="17:30">05:30 مساءً</option>
+                    <option value="18:00">06:00 مساءً</option>
+                    <option value="18:30">06:30 مساءً</option>
+                    <option value="19:00">07:00 مساءً</option>
+                    <option value="19:30">07:30 مساءً</option>
+                    <option value="20:00">08:00 مساءً</option>
+                    <option value="20:30">08:30 مساءً</option>
+                    <option value="21:00">09:00 ليلاً</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="booking-name-input">اسمك الكامل:</label>
+                  <input type="text" id="booking-name-input" class="form-input" placeholder="مثال: محمد العمري" required />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="booking-phone-input">رقم الهاتف:</label>
+                  <input type="tel" id="booking-phone-input" class="form-input" placeholder="0555 00 00 00" required />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="booking-notes-input">ملاحظات إضافية للحلاق (اختياري):</label>
+                <textarea id="booking-notes-input" class="form-textarea" rows="2" placeholder="نوع القصة المفضلة، أو أي تفاصيل ترغب بها..."></textarea>
+              </div>
+
+              <p style="font-size:0.8rem; color:#a1a1aa; margin-bottom:16px;">
+                💡 بمجرد تأكيد الحجز، يتلقى الحلاق إشعاراً ليقرر قبول الوقت أو اقتراح بديل فوراً.
+              </p>
+
+              <button type="submit" class="btn-primary w-full" style="font-size:1.05rem; padding:14px;">
+                تأكيد وإرسال طلب الحجز
+              </button>
+            </form>
+          </div>
+
+          <!-- Booking Success Wrap -->
+          <div id="booking-success-wrap" style="display:none;" class="booking-success-box">
+            <div class="success-icon-wrap">✓</div>
+            <h3 style="font-size:1.35rem; color:#fff; margin-bottom:6px;">تم إرسال طلب الحجز بنجاح!</h3>
+            <p style="color:#a1a1aa; font-size:0.9rem;">احتفظ برقم الحجز لمتابعة حالة الموعد وقبول الحلاق له:</p>
+            
+            <div id="success-booking-id" class="booking-code-badge">GOLD-0000</div>
+
+            <div class="success-details-card">
+              <div class="success-row"><span>الحلاق المختار:</span> <strong id="success-barber-name">-</strong></div>
+              <div class="success-row"><span>الخدمة:</span> <strong id="success-service-name">-</strong></div>
+              <div class="success-row"><span>اليوم والتوقيت:</span> <strong id="success-date-time" class="text-gold">-</strong></div>
+              <div class="success-row"><span>الزبون:</span> <span id="success-client-name">-</span></div>
+              <div class="success-row"><span>رقم الهاتف:</span> <span id="success-client-phone">-</span></div>
+            </div>
+
+            <div style="background:rgba(217, 119, 6, 0.1); border:1px solid rgba(217, 119, 6, 0.3); border-radius:8px; padding:12px; margin-bottom:18px; font-size:0.85rem; color:#fde047;">
+              ⏳ موعدك الآن قيد المراجعة لدى الحلاق. يمكنك التحقق من قبول الحلاق للموعد في أي وقت من قسم "حجوزاتي" برقم هاتفك.
+            </div>
+
+            <div style="display:flex; gap:10px;">
+              <button type="button" class="btn-primary w-full modal-close-btn-custom" onclick="closeModal('#modal-booking')">
+                حسناً، تم
+              </button>
+              <button type="button" class="btn-secondary" onclick="closeModal('#modal-booking'); openModal('#modal-lookup');">
+                متابعة حجوزاتي 🔍
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: CLIENT APPOINTMENTS LOOKUP -->
+    <div id="modal-lookup" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">
+            <span>🔍 متابعة مواعيدي وحالة الحجز</span>
+          </h3>
+          <button type="button" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="lookup-form" style="margin-bottom:20px;">
+            <label class="form-label" for="lookup-phone-input">أدخل رقم هاتفك أو كود الحجز (GOLD-xxxx):</label>
+            <div style="display:flex; gap:10px;">
+              <input type="text" id="lookup-phone-input" class="form-input" placeholder="0555 00 00 00" required />
+              <button type="submit" class="btn-primary" style="white-space:nowrap; padding:0 20px;">
+                بحث
+              </button>
+            </div>
+          </form>
+
+          <div id="lookup-results-list">
+            <div class="empty-state">
+              أدخل رقم هاتفك أعلاه لعرض المواعيد وقرار الحلاق (مقبول / قيد المراجعة / مرفوض).
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: BARBER LOGIN -->
+    <div id="modal-barber-login" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title">
+            <span>🔐 تسجيل دخول الحلاقين</span>
+          </h3>
+          <button type="button" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div style="background:#1b1f2a; border:1px solid #282f42; padding:12px; border-radius:10px; margin-bottom:18px; font-size:0.85rem; color:#9ca3af;">
+            <strong style="color:#fff;">معلومات تجريبية للحلاقين الـ ٣:</strong><br>
+            • الحلاق كريم: اسم المستخدم: <code style="color:#38bdf8;">karim</code> | كلمة السر: <code style="color:#38bdf8;">karim123</code><br>
+            • الحلاق يوسف: اسم المستخدم: <code style="color:#38bdf8;">youssef</code> | كلمة السر: <code style="color:#38bdf8;">youssef123</code><br>
+            • الحلاق سامي: اسم المستخدم: <code style="color:#38bdf8;">sami</code> | كلمة السر: <code style="color:#38bdf8;">sami123</code>
+          </div>
+
+          <form id="barber-login-form">
+            <div class="form-group">
+              <label class="form-label" for="barber-username-input">اسم المستخدم الخاص بالحلاق:</label>
+              <input type="text" id="barber-username-input" class="form-input" placeholder="مثال: karim" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="barber-password-input">كلمة المرور:</label>
+              <input type="password" id="barber-password-input" class="form-input" placeholder="••••••••" required />
+            </div>
+
+            <button type="submit" class="btn-primary w-full" style="padding:14px; font-size:1.05rem;">
+              دخول إلى لوحة إدارة المواعيد
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: BARBER DASHBOARD -->
+    <div id="modal-barber-dashboard" class="modal-backdrop">
+      <div class="modal-card modal-card-lg">
+        <div class="modal-header">
+          <h3 class="modal-title">
+            <span>✂️ لوحة تحكم الحلاق</span>
+          </h3>
+          <button type="button" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="barber-dash-header">
+            <div class="barber-profile-snap">
+              <img id="dash-barber-avatar" src="" alt="الحلاق" class="dash-avatar" />
+              <div>
+                <h3 id="dash-barber-name" style="color:#fff; font-size:1.2rem;">-</h3>
+                <span id="dash-barber-role" style="color:#f59e0b; font-size:0.85rem;">-</span>
+              </div>
+            </div>
+            <button type="button" id="barber-logout-btn" class="btn-danger-sm">
+              تسجيل خروج 🚪
+            </button>
+          </div>
+
+          <div class="dash-stats-row">
+            <div class="dash-stat-box">
+              <span id="dash-stat-today" class="val">0</span>
+              <span class="lbl">مواعيد اليوم</span>
+            </div>
+            <div class="dash-stat-box">
+              <span id="dash-stat-pending" class="val text-gold">0</span>
+              <span class="lbl">طلبات قيد المراجعة</span>
+            </div>
+            <div class="dash-stat-box">
+              <span id="dash-stat-accepted" class="val" style="color:#10b981;">0</span>
+              <span class="lbl">مواعيد مؤكدة</span>
+            </div>
+          </div>
+
+          <div class="dash-filter-tabs">
+            <button type="button" class="dash-filter-btn active" data-filter="all">جميع المواعيد</button>
+            <button type="button" class="dash-filter-btn" data-filter="today">مواعيد اليوم</button>
+            <button type="button" class="dash-filter-btn" data-filter="pending">قيد المراجعة ⏳</button>
+            <button type="button" class="dash-filter-btn" data-filter="accepted">المقبولة ✅</button>
+          </div>
+
+          <div id="barber-appointments-list">
+            <!-- Populated by app.js -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: OWNER PORTAL -->
+    <div id="modal-owner-portal" class="modal-backdrop">
+      <div class="modal-card modal-card-lg">
+        <div class="modal-header">
+          <h3 class="modal-title">
+            <span>👑 بوابة صاحب الصالون (إدارة كاملة)</span>
+          </h3>
+          <button type="button" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="owner-tabs-nav">
+            <button type="button" class="owner-tab-btn active" data-target="#tab-owner-barbers">إدارة الحلاقين والحسابات</button>
+            <button type="button" class="owner-tab-btn" data-target="#tab-owner-ads">أكواد الإعلانات HTML</button>
+            <button type="button" class="owner-tab-btn" data-target="#tab-owner-analytics">إحصائيات وعدد الزوار</button>
+          </div>
+
+          <!-- TAB 1: Barbers & Credentials -->
+          <div id="tab-owner-barbers" class="owner-tab-content active">
+            <h4 style="font-size:1.1rem; color:#fff; margin-bottom:12px;">الحلاقون المسجلون وبيانات دخولهم:</h4>
+            
+            <div class="table-responsive" style="margin-bottom:24px;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>الحلاق</th>
+                    <th>اسم الدخول</th>
+                    <th>كلمة المرور</th>
+                    <th>الهاتف</th>
+                    <th>إجراءات وبيانات</th>
+                  </tr>
+                </thead>
+                <tbody id="owner-barbers-table-body">
+                  <!-- Populated by app.js -->
+                </tbody>
+              </table>
+            </div>
+
+            <div style="background:#181b24; border:1px solid #282f42; padding:20px; border-radius:12px;">
+              <h4 style="font-size:1.05rem; color:#f59e0b; margin-bottom:14px;">➕ إضافة حلاق جديد إلى الصالون:</h4>
+              <form id="add-barber-form">
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label class="form-label" for="new-barber-name">الاسم الكامل:</label>
+                    <input type="text" id="new-barber-name" class="form-input" placeholder="مثال: حمزة وهراني" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="new-barber-role">التخصص:</label>
+                    <input type="text" id="new-barber-role" class="form-input" placeholder="مثال: متخصص تدريج ولحية" required />
+                  </div>
+                </div>
+
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label class="form-label" for="new-barber-exp">سنوات الخبرة:</label>
+                    <input type="text" id="new-barber-exp" class="form-input" placeholder="مثال: 6 سنوات خبرة" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="new-barber-phone">رقم الهاتف:</label>
+                    <input type="tel" id="new-barber-phone" class="form-input" placeholder="0555 00 00 00" />
+                  </div>
+                </div>
+
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label class="form-label" for="new-barber-user">اسم الدخول (Username):</label>
+                    <input type="text" id="new-barber-user" class="form-input" placeholder="مثال: hamza" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="new-barber-pass">كلمة المرور (Password):</label>
+                    <input type="text" id="new-barber-pass" class="form-input" placeholder="مثال: hamza2026" required />
+                  </div>
+                </div>
+
+                <button type="submit" class="btn-primary" style="margin-top:6px;">
+                  حفظ وإضافة الحلاق فوراً
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- TAB 2: HTML Ads Management -->
+          <div id="tab-owner-ads" class="owner-tab-content">
+            <p style="font-size:0.9rem; color:#a1a1aa; margin-bottom:18px;">
+              يمكنك لصق أي كود إعلاني HTML (مثل كود Google AdSense أو بنر إعلاني برابط أو صور عروض) في أي من المساحات الثلاث، وسيظهر فوراً في الموقع:
+            </p>
+
+            <form id="owner-ads-form">
+              <!-- Top Ad -->
+              <div class="form-group" style="background:#181b24; padding:16px; border-radius:10px; border:1px solid #282f42;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <label class="form-label" style="margin:0; font-weight:700; color:#f59e0b;" for="ad-top-html">١. إعلان أعلى الموقع (أعلى الهيدر):</label>
+                  <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; color:#fff; cursor:pointer;">
+                    <input type="checkbox" id="ad-top-enabled" /> تفعيل هذا الإعلان
+                  </label>
+                </div>
+                <textarea id="ad-top-html" class="form-textarea" rows="3" placeholder="الصق كود HTML هنا..."></textarea>
+              </div>
+
+              <!-- Mid Ad -->
+              <div class="form-group" style="background:#181b24; padding:16px; border-radius:10px; border:1px solid #282f42;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <label class="form-label" style="margin:0; font-weight:700; color:#f59e0b;" for="ad-mid-html">٢. إعلان وسط الموقع (بين الخدمات والحلاقين):</label>
+                  <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; color:#fff; cursor:pointer;">
+                    <input type="checkbox" id="ad-mid-enabled" /> تفعيل هذا الإعلان
+                  </label>
+                </div>
+                <textarea id="ad-mid-html" class="form-textarea" rows="3" placeholder="الصق كود HTML هنا..."></textarea>
+              </div>
+
+              <!-- Footer Ad -->
+              <div class="form-group" style="background:#181b24; padding:16px; border-radius:10px; border:1px solid #282f42;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <label class="form-label" style="margin:0; font-weight:700; color:#f59e0b;" for="ad-footer-html">٣. إعلان أسفل الموقع (قبل الفوتر):</label>
+                  <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; color:#fff; cursor:pointer;">
+                    <input type="checkbox" id="ad-footer-enabled" /> تفعيل هذا الإعلان
+                  </label>
+                </div>
+                <textarea id="ad-footer-html" class="form-textarea" rows="3" placeholder="الصق كود HTML هنا..."></textarea>
+              </div>
+
+              <button type="submit" class="btn-primary w-full" style="padding:14px; font-size:1.05rem;">
+                💾 حفظ وتطبيق الإعلانات في الموقع الآن
+              </button>
+            </form>
+          </div>
+
+          <!-- TAB 3: Analytics & Visitors -->
+          <div id="tab-owner-analytics" class="owner-tab-content">
+            <h4 style="font-size:1.1rem; color:#fff; margin-bottom:16px;">إحصائيات نشاط الموقع:</h4>
+            
+            <div class="dash-stats-row" style="grid-template-columns:repeat(2, 1fr); margin-bottom:20px;">
+              <div class="dash-stat-box" style="padding:18px;">
+                <span id="owner-stat-visitors" class="val" style="font-size:2rem; color:#38bdf8;">0</span>
+                <span class="lbl" style="font-size:0.9rem;">إجمالي عدد الزوار الفعلي</span>
+              </div>
+              <div class="dash-stat-box" style="padding:18px;">
+                <span id="owner-stat-total-apps" class="val" style="font-size:2rem; color:#f59e0b;">0</span>
+                <span class="lbl" style="font-size:0.9rem;">إجمالي المواعيد المسجلة</span>
+              </div>
+              <div class="dash-stat-box" style="padding:18px;">
+                <span id="owner-stat-accepted" class="val" style="font-size:2rem; color:#10b981;">0</span>
+                <span class="lbl" style="font-size:0.9rem;">المواعيد المقبولة والمؤكدة</span>
+              </div>
+              <div class="dash-stat-box" style="padding:18px;">
+                <span id="owner-stat-revenue" class="val" style="font-size:2rem; color:#fbbf24;">0 د.ج</span>
+                <span class="lbl" style="font-size:0.9rem;">إجمالي الإيرادات المتوقعة</span>
+              </div>
+            </div>
+
+            <div style="background:#181b24; padding:16px; border-radius:10px; border:1px solid #282f42; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+              <div>
+                <strong style="color:#fff; font-size:0.95rem;">تعديل أو تصفير عداد الزوار:</strong>
+                <p style="font-size:0.8rem; color:#a1a1aa;">يمكنك تعديل القيمة المعروضة لعدد الزوار حسب رغبتك.</p>
+              </div>
+              <button type="button" id="reset-visitors-btn" class="btn-secondary btn-sm">
+                تعديل عداد الزوار ✏️
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="./app.js"></script>
+    <script>
+      // Auto-update year
+      document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
   </body>
 </html>
-
