@@ -48,6 +48,18 @@ function showToast(message, type = "info") {
 }
 
 let activeBarber = null;
+let knownAppointmentIds = new Set();
+let appointmentsRealtimeReady = false;
+
+function notifyNewBarberAppointment(appointment) {
+  showToast(`لديك حجز جديد من ${appointment.clientName} يوم ${appointment.date} الساعة ${appointment.time}`, "success");
+  if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+    new Notification("حجز جديد في صالون المقص الذهبي", {
+      body: `${appointment.clientName} — ${appointment.serviceName} — ${appointment.date} ${appointment.time}`,
+      tag: appointment.id
+    });
+  }
+}
 
 function checkActiveSession() {
   const barberId = sessionStorage.getItem("barbershop_active_barber_id");
@@ -236,10 +248,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Subscribe to real-time appointments from Firebase
   subscribeAppointments((cloudAppts) => {
-    if (cloudAppts && cloudAppts.length > 0) {
-      safeSet("barbershop_appointments", cloudAppts);
-      renderBarberAppointments();
+    const nextAppointments = cloudAppts || [];
+    if (appointmentsRealtimeReady && activeBarber) {
+      nextAppointments
+        .filter((appointment) => appointment.barberId === activeBarber.id && appointment.status === "pending" && !knownAppointmentIds.has(appointment.id))
+        .forEach(notifyNewBarberAppointment);
     }
+    knownAppointmentIds = new Set(nextAppointments.map((appointment) => appointment.id));
+    appointmentsRealtimeReady = true;
+    safeSet("barbershop_appointments", nextAppointments);
+    renderBarberAppointments();
   });
 
   // Subscribe to barbers in case credentials updated
@@ -268,6 +286,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const match = await signInBarber(user, pass);
         sessionStorage.setItem("barbershop_active_barber_id", match.id);
         activeBarber = match;
+        if (typeof Notification !== "undefined" && Notification.permission === "default") {
+          Notification.requestPermission().catch(() => {});
+        }
         showToast(`أهلاً بك يا ${match.name}! تم تسجيل الدخول عبر Firebase 💈`, "success");
         showDashboardView();
       } catch (error) {
