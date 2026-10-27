@@ -92,14 +92,14 @@ export const OwnerPortal: React.FC<OwnerPortalProps> = ({
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
-    const ownerCred = credentials.find((c) => c.role === 'owner') || { password: 'admin123' };
-    if (adminPasswordInput.trim() === ownerCred.password || adminPasswordInput.trim() === 'admin123') {
+    const ownerCred = credentials.find((c) => c.role === 'owner');
+    if (ownerCred && adminPasswordInput.trim() === ownerCred.password) {
       setIsUnlocked(true);
       safeSessionSet('owner_portal_unlocked', 'true');
       setPasswordError('');
       onNotification('مرحباً بك في واجهة إدارة صاحب الصالون!', 'success');
     } else {
-      setPasswordError('كلمة المرور غير صحيحة. كلمة المرور الافتراضية: admin123');
+      setPasswordError('بيانات الدخول غير صحيحة. استخدم حساب Firebase الخاص بالمالك.');
     }
   };
 
@@ -226,7 +226,7 @@ export const OwnerPortal: React.FC<OwnerPortalProps> = ({
               </label>
               <input
                 type="password"
-                placeholder="أدخل كلمة المرور (الافتراضية: admin123)"
+                placeholder="أدخل كلمة مرور Firebase"
                 value={adminPasswordInput}
                 onChange={(e) => setAdminPasswordInput(e.target.value)}
                 className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 font-mono text-left"

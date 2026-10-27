@@ -173,38 +173,7 @@ export const resetToDefaults = () => {
 const CREDENTIALS_KEY = 'golden_shears_credentials_v1';
 const SESSION_KEY = 'golden_shears_session_v1';
 
-export const DEFAULT_CREDENTIALS: BarberCredential[] = [
-  {
-    barberId: 'barber-1',
-    barberName: 'كريم الساحلي',
-    username: 'karim',
-    password: 'karim123',
-    role: 'barber',
-  },
-  {
-    barberId: 'barber-2',
-    barberName: 'يوسف التميمي',
-    username: 'youssef',
-    password: 'youssef123',
-    role: 'barber',
-  },
-  {
-    barberId: 'barber-3',
-    barberName: 'سامي الجابري',
-    username: 'sami',
-    password: 'sami123',
-    role: 'barber',
-  },
-  {
-    barberId: 'owner',
-    barberName: 'صاحب الصالون (المدير)',
-    username: 'admin',
-    password: 'admin123',
-    role: 'owner',
-  },
-];
-
-import { BarberCredential, AuthSession } from '../types/barber';
+export const DEFAULT_CREDENTIALS: BarberCredential[] = [];
 
 export const getStoredCredentials = (): BarberCredential[] => {
   try {

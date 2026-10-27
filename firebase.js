@@ -6,6 +6,13 @@
  */
 
 import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "firebase/auth";
 import { 
   getDatabase, 
   ref, 
@@ -31,9 +38,64 @@ export const firebaseConfig = {
 
 // Initialize Firebase App
 export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const OWNER_EMAIL = "Wahablila31000@gmail.com";
+
+// حساب ثانوي لإنشاء حسابات الحلاقين دون تسجيل خروج المالك من لوحة التحكم.
+const provisioningApp = initializeApp(firebaseConfig, "barber-account-provisioning");
+const provisioningAuth = getAuth(provisioningApp);
 
 // Initialize Firebase Realtime Database
 export const rtdb = getDatabase(app, firebaseConfig.databaseURL);
+
+export function barberAuthEmail(username) {
+  const safeUsername = String(username || "").trim().toLowerCase().replace(/[^a-z0-9._-]/g, "-");
+  return `${safeUsername}@accounts.ykin-1241b.firebaseapp.com`;
+}
+
+export async function signInOwner(password) {
+  return signInWithEmailAndPassword(auth, OWNER_EMAIL, password);
+}
+
+export async function registerOwner(password) {
+  const credential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, password);
+  await set(ref(rtdb, `owners/${credential.user.uid}`), {
+    email: OWNER_EMAIL,
+    role: "owner",
+    createdAt: new Date().toISOString()
+  });
+  return credential;
+}
+
+export async function signInBarber(username, password) {
+  const email = barberAuthEmail(username);
+  const credential = await signInWithEmailAndPassword(auth, email, password);
+  const snapshot = await get(ref(rtdb, "barbers"));
+  const data = snapshot.exists() ? snapshot.val() : {};
+  const barber = Object.keys(data)
+    .map((id) => ({ id, ...data[id] }))
+    .find((item) => item.authUid === credential.user.uid);
+  if (!barber) {
+    await signOut(auth);
+    throw new Error("تم التحقق من الحساب لكن ملف الحلاق غير موجود في قاعدة البيانات.");
+  }
+  return { ...barber, authUid: credential.user.uid };
+}
+
+export async function createBarberAccount(username, password) {
+  const email = barberAuthEmail(username);
+  const credential = await createUserWithEmailAndPassword(provisioningAuth, email, password);
+  await signOut(provisioningAuth);
+  return { email, uid: credential.user.uid };
+}
+
+export function subscribeAuth(callback) {
+  return onAuthStateChanged(auth, callback);
+}
+
+export function signOutFirebase() {
+  return signOut(auth);
+}
 
 // Initialize Analytics conditionally (only supported in browser environments)
 export let analytics = null;
@@ -149,14 +211,12 @@ export function subscribeBarbers(callback) {
   try {
     const barbersRef = ref(rtdb, "barbers");
     return onValue(barbersRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const items = Object.keys(data).map(key => ({
-          id: key,
-          ...data[key]
-        }));
-        callback(items);
-      }
+      const data = snapshot.exists() ? snapshot.val() : {};
+      const items = Object.keys(data).map(key => ({
+        id: key,
+        ...data[key]
+      }));
+      callback(items);
     }, (error) => {
       console.warn("RTDB barbers warning:", error.message);
     });

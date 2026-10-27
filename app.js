@@ -11,59 +11,14 @@ import {
   subscribeAds,
   subscribeVisitors,
   saveAppointmentCloud,
-  seedBarbersIfEmpty,
   updateVisitorsCloud,
-  incrementVisitorCounter
+  incrementVisitorCounter,
+  signInBarber
 } from "./firebase.js";
 
 // Initial Seed Data
-const DEFAULT_BARBERS = [
-  {
-    id: "barber-karim",
-    name: "كريم بن عيسى",
-    role: "خبير القصات الكلاسيكية وتصفيف اللحية الملكية",
-    experience: "10 سنوات خبرة",
-    rating: 4.9,
-    reviewsCount: 142,
-    phone: "0555 11 22 33",
-    username: "karim",
-    password: "karim123",
-    image: "./public/images/barber_karim_1792939478110.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80",
-    available: true,
-    workingHours: "09:00 ص - 21:00 م"
-  },
-  {
-    id: "barber-youssef",
-    name: "يوسف بلحاج",
-    role: "متخصص تدريج الشعر الفيد (Fade) ونحت اللحية",
-    experience: "7 سنوات خبرة",
-    rating: 4.9,
-    reviewsCount: 118,
-    phone: "0555 22 33 44",
-    username: "youssef",
-    password: "youssef123",
-    image: "./public/images/barber_youssef_1792939479092.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80",
-    available: true,
-    workingHours: "10:00 ص - 22:00 م"
-  },
-  {
-    id: "barber-sami",
-    name: "سامي بوعلام",
-    role: "مصفف كبار الشخصيات VIP ومساج وعلاجات البروتين",
-    experience: "8 سنوات خبرة",
-    rating: 5.0,
-    reviewsCount: 165,
-    phone: "0555 33 44 55",
-    username: "sami",
-    password: "sami123",
-    image: "./public/images/barber_sami_1792939479036.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1517832606589-7629c3397143?auto=format&fit=crop&w=600&q=80",
-    available: true,
-    workingHours: "09:00 ص - 20:00 م"
-  }
-];
+// حسابات الحلاقين تُنشأ من لوحة المالك وتُقرأ من Firebase فقط.
+const DEFAULT_BARBERS = [];
 
 const DEFAULT_SERVICES = [
   {
@@ -132,7 +87,7 @@ const DEFAULT_ADS = {
     html: `<div style="background: #17171d; border: 1px dashed #d97706; padding: 16px; border-radius: 14px; text-align: center;">
       <p style="color: #f59e0b; font-weight: 700; margin-bottom: 4px;">مساحة إعلانية مخصصة (وسط الموقع)</p>
       <p style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 8px;">يمكن لصاحب الصالون لصق أي كود إعلاني HTML (بنرات أو Google Ads) من لوحة الإدارة.</p>
-      <span style="display: inline-block; background: #27272a; color: #e4e4e7; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem;">رقم هاتف الصالون للاستفسار: 0555 12 34 56</span>
+      <span style="display: inline-block; background: #27272a; color: #e4e4e7; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem;">رقم هاتف الصالون للاستفسار: 0777 11 76 63</span>
     </div>`
   },
   footer: {
@@ -469,7 +424,7 @@ function handleBookingSubmit(e) {
     return;
   }
   if (!phone || phone.length < 9) {
-    showToast("يرجى إدخال رقم هاتف صالح (مثال: 0555123456)", "warning");
+    showToast("يرجى إدخال رقم هاتف صالح (مثال: 0777117663)", "warning");
     return;
   }
 
@@ -590,7 +545,7 @@ function handleAppointmentsLookup(phoneOrCode) {
         </div>
         ${actionExtra}
         <div class="lookup-card-actions">
-          <a href="tel:0555123456" class="btn-outline-sm">📞 اتصال بالصالون</a>
+          <a href="tel:0777117663" class="btn-outline-sm">📞 اتصال بالصالون</a>
           <button type="button" class="btn-danger-sm cancel-client-app-btn" data-id="${app.id}">إلغاء الموعد</button>
         </div>
       </div>
@@ -628,28 +583,21 @@ function handleAppointmentsLookup(phoneOrCode) {
 }
 
 // BARBER LOGIN & DASHBOARD
-function handleBarberLogin(e) {
+async function handleBarberLogin(e) {
   e.preventDefault();
   const usernameInput = $("#barber-username-input").value.trim().toLowerCase();
-  const passwordInput = $("#barber-password-input").value.trim();
-
-  const foundBarber = State.barbers.find(b => 
-    b.username.toLowerCase() === usernameInput && b.password === passwordInput
-  );
-
-  if (!foundBarber) {
-    showToast("اسم المستخدم أو كلمة المرور غير صحيحة", "error");
-    return;
+  const passwordInput = $("#barber-password-input").value;
+  try {
+    const barber = await signInBarber(usernameInput, passwordInput);
+    State.currentBarberSession = barber;
+    safeSet("barbershop_active_barber", barber);
+    closeModal("#modal-barber-login");
+    $("#barber-login-form").reset();
+    showToast(`أهلاً بك يا ${barber.name}! تم تسجيل الدخول عبر Firebase بنجاح.`, "success");
+    openBarberDashboard();
+  } catch (error) {
+    showToast("اسم المستخدم أو كلمة المرور غير صحيحة، أو لم يجهز المالك الحساب بعد.", "error");
   }
-
-  State.currentBarberSession = foundBarber;
-  safeSet("barbershop_active_barber", foundBarber);
-
-  closeModal("#modal-barber-login");
-  $("#barber-login-form").reset();
-  showToast(`أهلاً بك يا ${foundBarber.name}! تم تسجيل الدخول بنجاح.`, "success");
-
-  openBarberDashboard();
 }
 
 function openBarberDashboard() {
@@ -818,9 +766,6 @@ function renderBarberAppointments(filter = "all") {
 
 // INIT APPLICATION
 function initApp() {
-  // Seed initial barbers if empty
-  seedBarbersIfEmpty(DEFAULT_BARBERS);
-
   // Real-time Cloud Firestore Subscriptions (ykin-1241b)
   subscribeBarbers((cloudBarbers) => {
     if (cloudBarbers && cloudBarbers.length > 0) {

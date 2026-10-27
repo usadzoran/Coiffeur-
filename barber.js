@@ -6,8 +6,10 @@
 
 import { 
   subscribeAppointments, 
-  updateAppointmentStatusCloud, 
-  subscribeBarbers 
+  updateAppointmentStatusCloud,
+  subscribeBarbers,
+  signInBarber,
+  signOutFirebase
 } from "./firebase.js";
 
 function safeGet(key, defaultVal) {
@@ -258,27 +260,25 @@ document.addEventListener("DOMContentLoaded", () => {
   // Login form
   const loginForm = document.getElementById("barber-login-form");
   if (loginForm) {
-    loginForm.addEventListener("submit", (e) => {
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const user = document.getElementById("barber-input-username").value.trim().toLowerCase();
-      const pass = document.getElementById("barber-input-password").value.trim();
-
-      const barbers = safeGet("barbershop_barbers", []);
-      const match = barbers.find(b => b.username?.toLowerCase() === user && b.password === pass);
-
-      if (match) {
+      const pass = document.getElementById("barber-input-password").value;
+      try {
+        const match = await signInBarber(user, pass);
         sessionStorage.setItem("barbershop_active_barber_id", match.id);
         activeBarber = match;
-        showToast(`أهلاً بك يا ${match.name}! تم تسجيل الدخول بنجاح 💈`, "success");
+        showToast(`أهلاً بك يا ${match.name}! تم تسجيل الدخول عبر Firebase 💈`, "success");
         showDashboardView();
-      } else {
-        showToast("اسم المستخدم أو كلمة المرور غير صحيحة!", "error");
+      } catch (error) {
+        showToast("اسم المستخدم أو كلمة المرور غير صحيحة، أو لم يجهز المالك الحساب بعد.", "error");
       }
     });
   }
 
   // Logout
-  document.getElementById("barber-logout-btn")?.addEventListener("click", () => {
+  document.getElementById("barber-logout-btn")?.addEventListener("click", async () => {
+    await signOutFirebase();
     sessionStorage.removeItem("barbershop_active_barber_id");
     activeBarber = null;
     showToast("تم تسجيل الخروج", "info");

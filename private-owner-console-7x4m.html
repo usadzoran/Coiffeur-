@@ -222,39 +222,21 @@
           </p>
 
           <form id="owner-pin-form">
+            <div style="margin-bottom: 14px; text-align: right;">
+              <label for="owner-email-input" style="display:block; font-size:.85rem; font-weight:700; color:#e4e4e7; margin-bottom:8px;">بريد المالك في Firebase</label>
+              <input type="email" id="owner-email-input" value="Wahablila31000@gmail.com" readonly class="form-control" style="width:100%; height:48px; background:#0b0d13; border:1.5px solid #333a50; border-radius:12px; color:#9ca3af; padding:0 16px;" />
+            </div>
             <div style="margin-bottom: 18px; text-align: right;">
-              <label for="owner-pin-input" style="display: block; font-size: 0.85rem; font-weight: 700; color: #e4e4e7; margin-bottom: 8px;">
-                الرمز السري للإدارة (PIN):
-              </label>
-              <div style="position: relative;">
-                <input 
-                  type="password" 
-                  id="owner-pin-input" 
-                  class="form-control" 
-                  placeholder="أدخل الرمز السري هنا..."
-                  style="width: 100%; height: 50px; background: #0b0d13; border: 1.5px solid #333a50; border-radius: 12px; color: #fff; font-size: 1.1rem; padding: 0 16px; text-align: center; letter-spacing: 2px;"
-                  autocomplete="current-password"
-                  required
-                >
-                <button 
-                  type="button" 
-                  id="toggle-pin-visibility" 
-                  style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer; padding: 4px;"
-                  title="إظهار / إخفاء الرمز"
-                >
-                  👁️
-                </button>
-              </div>
+              <label for="owner-pin-input" style="display:block; font-size:.85rem; font-weight:700; color:#e4e4e7; margin-bottom:8px;">كلمة مرور Firebase</label>
+              <input type="password" id="owner-pin-input" class="form-control" placeholder="أدخل كلمة المرور التي أنشأتها" autocomplete="current-password" required style="width:100%; height:50px; background:#0b0d13; border:1.5px solid #333a50; border-radius:12px; color:#fff; font-size:1.05rem; padding:0 16px; text-align:center; letter-spacing:1px;" />
             </div>
-
-            <div style="background: rgba(245,158,11,0.08); border: 1px dashed rgba(245,158,11,0.3); border-radius: 10px; padding: 10px 14px; margin-bottom: 20px; font-size: 0.82rem; color: #fbbf24; text-align: right;">
-              💡 <strong>الرمز الافتراضي المبرمج:</strong> <code style="background: #232838; padding: 2px 6px; border-radius: 4px; color: #38bdf8;">admin2026</code> (يمكنك تغييره من الداخل بأي وقت).
-            </div>
-
-            <button type="submit" class="btn-primary w-full" style="height: 50px; font-size: 1rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
-              <span>🔓 دخول لوحة التحكم</span>
-            </button>
+            <button type="submit" class="btn-primary w-full" style="height:50px; font-size:1rem; font-weight:800; border-radius:12px;">🔓 دخول عبر Firebase</button>
+            <button type="button" id="owner-create-account-btn" class="action-pill-btn" style="width:100%; margin-top:10px; justify-content:center;">إنشاء حساب المالك لأول مرة</button>
           </form>
+
+          <div style="background:rgba(56,189,248,.08); border:1px dashed rgba(56,189,248,.3); border-radius:10px; padding:10px 14px; margin-top:16px; font-size:.8rem; color:#bae6fd; text-align:right;">
+            لا توجد كلمة مرور افتراضية. في أول زيارة اختر كلمة مرور قوية ثم اضغط «إنشاء حساب المالك لأول مرة».
+          </div>
 
           <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid #232736;">
             <a href="./index.html" style="font-size: 0.85rem; color: #9ca3af; text-decoration: underline;">
@@ -564,19 +546,7 @@
                 احرص على استخدام رمز سري قوي لا يشاركه أحد معك لحماية بيانات الدخول والأرباح.
               </p>
 
-              <form id="change-pin-form">
-                <div style="margin-bottom: 14px;">
-                  <label style="display: block; font-size: 0.85rem; color: #e4e4e7; margin-bottom: 6px; font-weight: 600;">الرمز السري الحالي:</label>
-                  <input type="password" id="current-pin-input" class="form-control" style="width: 100%; background: #0c0e14; border: 1px solid #2c3245; color: #fff; padding: 10px 14px; border-radius: 8px;" required>
-                </div>
-                <div style="margin-bottom: 18px;">
-                  <label style="display: block; font-size: 0.85rem; color: #e4e4e7; margin-bottom: 6px; font-weight: 600;">الرمز السري الجديد:</label>
-                  <input type="password" id="new-pin-input" class="form-control" style="width: 100%; background: #0c0e14; border: 1px solid #2c3245; color: #fff; padding: 10px 14px; border-radius: 8px;" minlength="4" required>
-                </div>
-                <button type="submit" class="btn-primary" style="padding: 10px 20px; font-weight: 700; border-radius: 8px;">
-                  تحديث الرمز السري 🔒
-                </button>
-              </form>
+
             </div>
 
             <!-- Manage Visitors Counter -->
@@ -642,11 +612,11 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
               <div>
                 <label style="display: block; font-size: 0.82rem; color: #fbbf24; margin-bottom: 4px;">اسم الدخول (Username) *</label>
-                <input type="text" id="add-barber-username" class="form-control" placeholder="amin" required style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #38bdf8; font-family: monospace; padding: 8px 12px; border-radius: 8px;">
+                <input type="text" id="add-barber-username" class="form-control" placeholder="اسم مستخدم جديد" required style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #38bdf8; font-family: monospace; padding: 8px 12px; border-radius: 8px;">
               </div>
               <div>
                 <label style="display: block; font-size: 0.82rem; color: #fbbf24; margin-bottom: 4px;">كلمة السر (Password) *</label>
-                <input type="text" id="add-barber-password" class="form-control" placeholder="amin123" required style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #38bdf8; font-family: monospace; padding: 8px 12px; border-radius: 8px;">
+                <input type="text" id="add-barber-password" class="form-control" placeholder="أدخل كلمة مرور مؤقتة (8 أحرف على الأقل)" required style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #38bdf8; font-family: monospace; padding: 8px 12px; border-radius: 8px;">
               </div>
             </div>
             <div style="margin-bottom: 16px;">
