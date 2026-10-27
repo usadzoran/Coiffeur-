@@ -82,6 +82,7 @@ let barbers = [];
 let appointments = safeGet("barbershop_appointments", []);
 let ads = safeGet("barbershop_ads", DEFAULT_ADS);
 let visitors = safeGet("barbershop_visitors", 0);
+let appointmentsSubscriptionReady = false;
 
 // Toast Notification
 function showToast(message, type = "info") {
@@ -144,12 +145,19 @@ function initDashboard() {
 
   // Real-time Cloud Subscriptions
   subscribeAppointments((cloudAppts) => {
-    if (cloudAppts && cloudAppts.length > 0) {
-      appointments = cloudAppts;
-      safeSet("barbershop_appointments", cloudAppts);
-      renderAppointmentsTable();
-      updateMetrics();
+    const nextAppointments = cloudAppts || [];
+    if (appointmentsSubscriptionReady) {
+      const previousIds = new Set(appointments.map((item) => item.id));
+      const newPending = nextAppointments.find((item) => !previousIds.has(item.id) && item.status === "pending");
+      if (newPending) {
+        showToast(`حجز جديد من ${newPending.clientName} لدى ${newPending.barberName}. افتح زر واتساب لإشعار الحلاق.`, "success");
+      }
     }
+    appointments = nextAppointments;
+    appointmentsSubscriptionReady = true;
+    safeSet("barbershop_appointments", appointments);
+    renderAppointmentsTable();
+    updateMetrics();
   });
 
   subscribeBarbers((cloudBarbers) => {
@@ -489,6 +497,7 @@ function renderAppointmentsTable() {
             ${item.status !== "rejected" ? `
               <button type="button" class="action-pill-btn" style="color:#f87171; border-color:rgba(248,113,113,0.3); padding:3px 8px; font-size:0.75rem;" onclick="updateAppointmentStatus('${item.id}', 'rejected')">إلغاء</button>
             ` : ''}
+            <button type="button" class="action-pill-btn" style="color:#25d366; border-color:rgba(37,211,102,0.35); padding:3px 8px; font-size:0.75rem;" onclick="notifyBarberWhatsApp('${item.id}')" title="فتح رسالة واتساب جاهزة للحلاق">واتساب</button>
             <button type="button" class="action-pill-btn" style="color:#ef4444; border-color:rgba(239,68,68,0.3); padding:3px 8px; font-size:0.75rem;" onclick="deleteAppointment('${item.id}')" title="حذف نهائياً">🗑️</button>
           </div>
         </td>
@@ -496,6 +505,20 @@ function renderAppointmentsTable() {
     `;
   }).join("");
 }
+
+// فتح رسالة واتساب جاهزة للحلاق من حساب المالك التجاري.
+window.notifyBarberWhatsApp = function(apptId) {
+  const appointment = appointments.find((item) => item.id === apptId);
+  if (!appointment) return;
+  const barber = barbers.find((item) => item.id === appointment.barberId);
+  if (!barber || !barber.phone) {
+    showToast("لا يوجد رقم هاتف محفوظ لهذا الحلاق.", "warning");
+    return;
+  }
+  const phone = barber.phone.replace(/\D/g, "").replace(/^0/, "213");
+  const message = encodeURIComponent(`مرحباً ${barber.name}، لديك حجز جديد في صالون المقص الذهبي:\n\nرقم الحجز: ${appointment.id}\nالزبون: ${appointment.clientName}\nهاتف الزبون: ${appointment.clientPhone}\nالخدمة: ${appointment.serviceName}\nالتاريخ: ${appointment.date}\nالوقت: ${appointment.time}${appointment.notes ? `\nملاحظات: ${appointment.notes}` : ""}\n\nيرجى فتح لوحة الحلاق لتأكيد الموعد أو اقتراح وقت بديل.`);
+  window.open(`https://wa.me/${phone}?text=${message}`, "_blank", "noopener,noreferrer");
+};
 
 // Update Appointment Status
 window.updateAppointmentStatus = async function(apptId, newStatus) {
