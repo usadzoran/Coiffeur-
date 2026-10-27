@@ -197,9 +197,6 @@
             <span>🌐 موقع الزبائن</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>
-          <a href="./barber.html" class="action-pill-btn" target="_blank" title="فتح بوابة الحلاقين">
-            <span>💈 بوابة الحلاقين</span>
-          </a>
           <button type="button" id="owner-logout-btn" class="action-pill-btn" style="color: #ef4444; border-color: rgba(239,68,68,0.3); display: none;">
             <span>🚪 خروج</span>
           </button>
@@ -264,60 +261,6 @@
           </div>
           <div style="font-size: 0.75rem; color: #a1a1aa; background: #0e111a; padding: 4px 10px; border-radius: 8px; border: 1px solid #232738;">
             Firebase Realtime Database
-          </div>
-        </div>
-
-        <!-- Standalone Links Notice Card -->
-        <div style="background: linear-gradient(135deg, #161924 0%, #1c2130 100%); border: 1px solid rgba(245,158,11,0.3); border-radius: 16px; padding: 20px 24px; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <span style="font-size: 1.6rem;">🔗</span>
-              <div>
-                <h2 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0;">روابط المنظومة المستقلة</h2>
-                <p style="font-size: 0.82rem; color: #9ca3af; margin: 0;">احتفظ بهذه الروابط لديك لمشاركتها مع الحلاقين أو استخدامها مستقبلاً</p>
-              </div>
-            </div>
-            <button type="button" id="copy-all-links-btn" class="action-pill-btn" style="background: #23293c; border-color: #f59e0b; color: #fbbf24;">
-              📋 نسخ كل الروابط معاً
-            </button>
-          </div>
-
-          <div class="url-copy-box">
-            <div>
-              <div style="font-size: 0.85rem; font-weight: 700; color: #f4f4f5; margin-bottom: 2px;">
-                👑 1. رابط لوحة صاحب الموقع (هذه الصفحة المستقلة):
-              </div>
-              <div class="url-text" id="owner-page-url">--</div>
-            </div>
-            <div style="display: flex; gap: 8px;">
-              <button type="button" class="action-pill-btn" onclick="copySpecificUrl('owner-page-url')">نسخ الرابط</button>
-            </div>
-          </div>
-
-          <div class="url-copy-box">
-            <div>
-              <div style="font-size: 0.85rem; font-weight: 700; color: #f4f4f5; margin-bottom: 2px;">
-                💈 2. رابط بوابة الحلاقين (أرسله للحلاقين الـ ٣ لدخول حساباتهم):
-              </div>
-              <div class="url-text" id="barber-portal-url">--</div>
-            </div>
-            <div style="display: flex; gap: 8px;">
-              <button type="button" class="action-pill-btn" onclick="copySpecificUrl('barber-portal-url')">نسخ الرابط</button>
-              <a href="./barber.html" target="_blank" class="action-pill-btn">فتح</a>
-            </div>
-          </div>
-
-          <div class="url-copy-box" style="margin-bottom: 0;">
-            <div>
-              <div style="font-size: 0.85rem; font-weight: 700; color: #f4f4f5; margin-bottom: 2px;">
-                🌐 3. رابط موقع الزبائن العام (لحجز المواعيد في بن فريحة):
-              </div>
-              <div class="url-text" id="client-site-url">--</div>
-            </div>
-            <div style="display: flex; gap: 8px;">
-              <button type="button" class="action-pill-btn" onclick="copySpecificUrl('client-site-url')">نسخ الرابط</button>
-              <a href="./index.html" target="_blank" class="action-pill-btn">فتح الموقع</a>
-            </div>
           </div>
         </div>
 
@@ -386,8 +329,8 @@
         <div id="tab-barbers" class="owner-tab-panel" style="display: block;">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 20px;">
             <div>
-              <h2 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 4px;">بيانات دخول الحلاقين (٣ حلاقين)</h2>
-              <p style="font-size: 0.85rem; color: #9ca3af;">يمكنك الاطلاع على اسم الدخول وكلمة السر لكل حلاق، أو نسخها وإرسالها له عبر واتساب مباشرة.</p>
+              <h2 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 4px;">الحلاقون المضافون</h2>
+              <p style="font-size: 0.85rem; color: #9ca3af;">يظهر هنا اسم كل حلاق ومعلومات دخوله ورقم واتساب الخاص به بعد الحفظ في Firebase.</p>
             </div>
             <button type="button" id="btn-add-barber-modal" class="btn-primary" style="padding: 10px 18px; border-radius: 10px; font-size: 0.88rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
               <span>➕ إضافة حلاق جديد</span>

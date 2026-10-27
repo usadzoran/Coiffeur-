@@ -138,7 +138,6 @@ function updateAuthView() {
 
 // Initialize Dashboard
 function initDashboard() {
-  setupUrls();
   updateMetrics();
   renderBarbersCredentials();
   initAdsManager();
@@ -186,64 +185,9 @@ function initDashboard() {
   });
 }
 
-// Setup Clean Absolute URLs
-function setupUrls() {
-  const currentOrigin = window.location.origin;
-  const currentPath = window.location.pathname;
-  const dirPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-
-  const ownerUrl = `${currentOrigin}${dirPath}private-owner-console-7x4m.html`;
-  const barberUrl = `${currentOrigin}${dirPath}barber.html`;
-  const clientUrl = `${currentOrigin}${dirPath}index.html`;
-
-  const ownerEl = document.getElementById("owner-page-url");
-  const barberEl = document.getElementById("barber-portal-url");
-  const clientEl = document.getElementById("client-site-url");
-
-  if (ownerEl) ownerEl.textContent = ownerUrl;
-  if (barberEl) barberEl.textContent = barberUrl;
-  if (clientEl) clientEl.textContent = clientUrl;
-}
-
-// Copy URL handler
-window.copySpecificUrl = function(elementId) {
-  const el = document.getElementById(elementId);
-  if (!el) return;
-  const text = el.textContent;
-  if (!text) return;
-  navigator.clipboard.writeText(text).then(() => {
-    showToast("تم نسخ الرابط بنجاح إلى الحافظة! 📋", "success");
-  }).catch(() => {
-    prompt("انسخ الرابط يدوياً:", text);
-  });
-};
-
-// Copy All Links
-document.getElementById("copy-all-links-btn")?.addEventListener("click", () => {
-  const ownerUrl = document.getElementById("owner-page-url")?.textContent || "";
-  const barberUrl = document.getElementById("barber-portal-url")?.textContent || "";
-  const clientUrl = document.getElementById("client-site-url")?.textContent || "";
-
-  const fullText = `💈 روابط صالون المقص الذهبي - بن فريحة بوهران:
-1️⃣ رابط موقع الزبائن لحجز المواعيد:
-${clientUrl}
-
-2️⃣ رابط بوابة الحلاقين لتسجيل الدخول وقبول المواعيد:
-${barberUrl}
-
-3️⃣ رابط لوحة صاحب الصالون الإدارية المستقلة:
-${ownerUrl}`;
-
-  navigator.clipboard.writeText(fullText).then(() => {
-    showToast("تم نسخ جميع الروابط بنجاح! 📋", "success");
-  }).catch(() => {
-    prompt("انسخ الروابط:", fullText);
-  });
-});
-
 // Update Metrics Bar
 function updateMetrics() {
-  barbers = safeGet("barbershop_barbers", DEFAULT_BARBERS);
+  barbers = safeGet("barbershop_barbers", []);
   appointments = safeGet("barbershop_appointments", []);
   visitors = safeGet("barbershop_visitors", 0);
 
@@ -275,9 +219,8 @@ function renderBarbersCredentials() {
   const container = document.getElementById("barbers-credentials-list");
   if (!container) return;
 
-  barbers = safeGet("barbershop_barbers", DEFAULT_BARBERS);
-  const barberPortalUrl = document.getElementById("barber-portal-url")?.textContent || window.location.href.replace("private-owner-console-7x4m.html", "barber.html");
-
+  // القائمة تعكس الحلاقين المحفوظين فعلياً في Firebase، بلا حسابات تجريبية.
+  barbers = safeGet("barbershop_barbers", []);
   if (!barbers || barbers.length === 0) {
     container.innerHTML = `<div class="empty-state">لا يوجد حلاقين مسجلين حالياً. اضغط على "إضافة حلاق جديد" بالأعلى.</div>`;
     return;
@@ -285,43 +228,18 @@ function renderBarbersCredentials() {
 
   container.innerHTML = barbers.map(barber => {
     return `
-      <div class="barber-item-card">
-        <div style="display: flex; gap: 14px; align-items: flex-start;">
-          <img src="${barber.image || './public/images/barber_karim_1792939478110.jpg'}" alt="${barber.name}" class="barber-avatar" onerror="this.src='./public/images/barber_karim_1792939478110.jpg'">
-          <div style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
-              <div>
-                <h4 style="font-size: 1.1rem; font-weight: 800; color: #fff; margin: 0;">${barber.name}</h4>
-                <div style="font-size: 0.8rem; color: #fbbf24; margin: 2px 0 6px;">${barber.role}</div>
-                <div style="font-size: 0.75rem; color: #9ca3af;">📞 ${barber.phone} • ${barber.experience || 'حلاق محترف'}</div>
-              </div>
-              <div style="display: flex; gap: 6px;">
-                <button type="button" class="action-pill-btn" style="color: #4ade80; border-color: rgba(74,222,128,0.3);" onclick="copyBarberCredentials('${barber.id}')">
-                  📋 نسخ رابط الدخول
-                </button>
-                <button type="button" class="action-pill-btn" style="color: #f87171; border-color: rgba(239,68,68,0.3);" onclick="deleteBarber('${barber.id}')">
-                  حذف 🗑️
-                </button>
-              </div>
-            </div>
-
-            <!-- Credentials Box -->
-            <div class="credentials-badge">
-              <div style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 6px; font-weight: 700;">
-                🔑 بيانات تسجيل الدخول الخاصة بالحلاق (Cloud Sync):
-              </div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
-                <div class="cred-row">
-                  <span class="cred-label">اسم المستخدم (Username):</span>
-                  <span class="cred-val">${barber.username}</span>
-                </div>
-                <div class="cred-row">
-                  <span class="cred-label">كلمة السر:</span>
-                  <span class="cred-val">لا تُخزّن — أُرسلت للحلاق عند إنشاء الحساب</span>
-                </div>
-              </div>
+      <div class="barber-item-card" style="padding:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div>
+            <h4 style="font-size:1.1rem; font-weight:800; color:#fff; margin:0 0 8px;">${barber.name}</h4>
+            <div style="display:grid; gap:5px; font-size:.82rem; color:#d4d4d8;">
+              <div>👤 اسم الدخول: <strong style="color:#fbbf24;">${barber.username || 'غير متوفر'}</strong></div>
+              <div>📧 بريد الحساب: <strong style="color:#bae6fd;">${barber.authEmail || barber.email || 'حساب Firebase'}</strong></div>
+              <div>📱 واتساب: <strong style="color:#4ade80;">${barber.phone || 'غير مضاف'}</strong></div>
+              <div style="font-size:.74rem; color:#9ca3af;">🔒 كلمة المرور لا تُخزّن في اللوحة؛ تُسلّم للحلاق عند إنشاء الحساب.</div>
             </div>
           </div>
+          <button type="button" class="action-pill-btn" style="color:#f87171; border-color:rgba(239,68,68,0.3);" onclick="deleteBarber('${barber.id}')">حذف 🗑️</button>
         </div>
       </div>
     `;
@@ -341,8 +259,7 @@ function renderBarbersCredentials() {
 window.copyBarberCredentials = function(barberId) {
   const barber = barbers.find((item) => item.id === barberId);
   if (!barber) return;
-  const barberPortalUrl = document.getElementById("barber-portal-url")?.textContent || window.location.href.replace("private-owner-console-7x4m.html", "barber.html");
-  const message = `رابط دخول بوابة الحلاق ${barber.name}: ${barberPortalUrl}\nاسم المستخدم: ${barber.username}\nتم إرسال كلمة المرور الخاصة بك عند إنشاء الحساب.`;
+  const message = `بيانات دخول الحلاق ${barber.name}\nاسم المستخدم: ${barber.username}\nواتساب: ${barber.phone}\nتم إرسال كلمة المرور الخاصة بك عند إنشاء الحساب.`;
   navigator.clipboard.writeText(message).then(() => showToast(`تم نسخ رابط دخول ${barber.name}`, "success"));
 };
 
