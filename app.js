@@ -176,9 +176,7 @@ const State = {
   services: safeGet("barbershop_services", DEFAULT_SERVICES),
   appointments: safeGet("barbershop_appointments", []),
   ads: safeGet("barbershop_ads", DEFAULT_ADS),
-  ownerPin: safeGet("barbershop_owner_pin", "admin2026"),
   currentBarberSession: safeGet("barbershop_active_barber", null),
-  isOwnerLoggedIn: false,
   visitors: safeGet("barbershop_visitors", 0),
   selectedBarberForBooking: "",
   selectedServiceForBooking: ""
@@ -818,197 +816,6 @@ function renderBarberAppointments(filter = "all") {
   });
 }
 
-// OWNER PORTAL LOGIC
-function checkOwnerAccess() {
-  if (State.isOwnerLoggedIn) {
-    openOwnerModal();
-  } else {
-    const pin = prompt("🔐 أدخل كلمة مرور صاحب الصالون (الافتراضية: admin2026):");
-    if (pin === State.ownerPin || pin === "admin2026") {
-      State.isOwnerLoggedIn = true;
-      openOwnerModal();
-    } else if (pin !== null) {
-      showToast("كلمة المرور غير صحيحة!", "error");
-    }
-  }
-}
-
-function openOwnerModal() {
-  renderOwnerStats();
-  renderOwnerBarbersList();
-  loadOwnerAdsForm();
-  openModal("#modal-owner-portal");
-}
-
-function renderOwnerStats() {
-  $("#owner-stat-visitors").textContent = State.visitors;
-  $("#owner-stat-total-apps").textContent = State.appointments.length;
-  const accepted = State.appointments.filter(a => a.status === "accepted").length;
-  $("#owner-stat-accepted").textContent = accepted;
-  
-  const estimatedRevenue = State.appointments
-    .filter(a => a.status === "accepted")
-    .reduce((sum, a) => sum + (Number(a.servicePrice) || 0), 0);
-  $("#owner-stat-revenue").textContent = `${estimatedRevenue} د.ج`;
-}
-
-function renderOwnerBarbersList() {
-  const container = $("#owner-barbers-table-body");
-  if (!container) return;
-
-  container.innerHTML = State.barbers.map((b, idx) => {
-    return `
-      <tr>
-        <td><strong>${b.name}</strong></td>
-        <td><code>${b.username}</code></td>
-        <td><code>${b.password}</code></td>
-        <td>${b.phone}</td>
-        <td>
-          <button type="button" class="btn-xs btn-copy-cred" data-user="${b.username}" data-pass="${b.password}" data-name="${b.name}">
-            📋 نسخ بيانات الدخول
-          </button>
-          <button type="button" class="btn-xs btn-edit-barber" data-id="${b.id}">
-            ✏️ تعديل
-          </button>
-          ${State.barbers.length > 1 ? `
-            <button type="button" class="btn-xs btn-danger-xs btn-del-barber" data-id="${b.id}">
-              🗑️ حذف
-            </button>
-          ` : ''}
-        </td>
-      </tr>
-    `;
-  }).join("");
-
-  // Attach copy credentials
-  $$(".btn-copy-cred").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const u = btn.getAttribute("data-user");
-      const p = btn.getAttribute("data-pass");
-      const n = btn.getAttribute("data-name");
-      const textToCopy = `صالون المقص الذهبي - بن فريحة وهران\nمعلومات دخول الحلاق (${n}):\nاسم المستخدم: ${u}\nكلمة المرور: ${p}\nرابط الدخول: ${window.location.origin}${window.location.pathname}`;
-      
-      navigator.clipboard.writeText(textToCopy).then(() => {
-        showToast(`تم نسخ بيانات دخول ${n} بنجاح! يمكنك إرسالها له عبر واتساب.`, "success");
-      }).catch(() => {
-        prompt("انسخ معلومات الدخول أدناه:", textToCopy);
-      });
-    });
-  });
-
-  // Edit Barber
-  $$(".btn-edit-barber").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.getAttribute("data-id");
-      const barber = State.barbers.find(b => b.id === id);
-      if (!barber) return;
-
-      const newPass = prompt(`تعديل كلمة سر الحلاق (${barber.name}):`, barber.password);
-      if (newPass && newPass.trim()) {
-        barber.password = newPass.trim();
-        safeSet("barbershop_barbers", State.barbers);
-        showToast("تم تحديث كلمة المرور للحلاق بنجاح", "success");
-        renderOwnerBarbersList();
-      }
-    });
-  });
-
-  // Delete Barber
-  $$(".btn-del-barber").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.getAttribute("data-id");
-      if (confirm("هل أنت متأكد من حذف هذا الحلاق؟")) {
-        State.barbers = State.barbers.filter(b => b.id !== id);
-        safeSet("barbershop_barbers", State.barbers);
-        showToast("تم حذف الحلاق بنجاح", "info");
-        renderOwnerBarbersList();
-        renderBarbers();
-      }
-    });
-  });
-}
-
-// Add New Barber Form
-function handleAddNewBarber(e) {
-  e.preventDefault();
-  const name = $("#new-barber-name").value.trim();
-  const role = $("#new-barber-role").value.trim() || "حلاق محترف";
-  const experience = $("#new-barber-exp").value.trim() || "5 سنوات خبرة";
-  const phone = $("#new-barber-phone").value.trim() || "0555000000";
-  const username = $("#new-barber-user").value.trim().toLowerCase();
-  const password = $("#new-barber-pass").value.trim();
-
-  if (!name || !username || !password) {
-    showToast("يرجى ملء جميع الحقول المطلوبة (الاسم، اسم المستخدم، كلمة السر)", "warning");
-    return;
-  }
-
-  // Check unique username
-  if (State.barbers.some(b => b.username.toLowerCase() === username)) {
-    showToast("اسم المستخدم هذا مستعمل من قبل، اختر اسماً آخر", "error");
-    return;
-  }
-
-  const newBarber = {
-    id: "barber-" + Date.now(),
-    name: name,
-    role: role,
-    experience: experience,
-    rating: 5.0,
-    reviewsCount: 1,
-    phone: phone,
-    username: username,
-    password: password,
-    image: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80",
-    fallbackImage: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80",
-    available: true,
-    workingHours: "09:00 ص - 21:00 م"
-  };
-
-  State.barbers.push(newBarber);
-  safeSet("barbershop_barbers", State.barbers);
-
-  showToast(`تمت إضافة الحلاق الجديد (${name}) بنجاح!`, "success");
-  $("#add-barber-form").reset();
-  renderOwnerBarbersList();
-  renderBarbers();
-}
-
-// Load and Save Owner Ads Form
-function loadOwnerAdsForm() {
-  $("#ad-top-html").value = State.ads.header?.html || "";
-  $("#ad-top-enabled").checked = !!State.ads.header?.enabled;
-
-  $("#ad-mid-html").value = State.ads.middle?.html || "";
-  $("#ad-mid-enabled").checked = !!State.ads.middle?.enabled;
-
-  $("#ad-footer-html").value = State.ads.footer?.html || "";
-  $("#ad-footer-enabled").checked = !!State.ads.footer?.enabled;
-}
-
-function handleSaveAds(e) {
-  e.preventDefault();
-
-  State.ads = {
-    header: {
-      enabled: $("#ad-top-enabled").checked,
-      html: $("#ad-top-html").value
-    },
-    middle: {
-      enabled: $("#ad-mid-enabled").checked,
-      html: $("#ad-mid-html").value
-    },
-    footer: {
-      enabled: $("#ad-footer-enabled").checked,
-      html: $("#ad-footer-html").value
-    }
-  };
-
-  safeSet("barbershop_ads", State.ads);
-  renderAds();
-  showToast("تم حفظ الإعلانات وتحديثها مباشرة في الموقع! 🎯", "success");
-}
-
 // INIT APPLICATION
 function initApp() {
   // Seed initial barbers if empty
@@ -1100,43 +907,6 @@ function initApp() {
     });
   }
 
-  // Owner Tabs
-  $$(".owner-tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      $$(".owner-tab-btn").forEach(b => b.classList.remove("active"));
-      $$(".owner-tab-content").forEach(c => c.classList.remove("active"));
-      btn.classList.add("active");
-      const targetId = btn.getAttribute("data-target");
-      $(targetId)?.classList.add("active");
-    });
-  });
-
-  // Owner Add Barber Form
-  const addBarberForm = $("#add-barber-form");
-  if (addBarberForm) {
-    addBarberForm.addEventListener("submit", handleAddNewBarber);
-  }
-
-  // Owner Ads Form
-  const ownerAdsForm = $("#owner-ads-form");
-  if (ownerAdsForm) {
-    ownerAdsForm.addEventListener("submit", handleSaveAds);
-  }
-
-  // Reset Visitors Counter
-  const resetVisBtn = $("#reset-visitors-btn");
-  if (resetVisBtn) {
-    resetVisBtn.addEventListener("click", () => {
-      const newCount = prompt("أدخل قيمة عدد الزوار الجديدة:", State.visitors);
-      if (newCount !== null && !isNaN(newCount)) {
-        State.visitors = parseInt(newCount, 10);
-        safeSet("barbershop_visitors", State.visitors);
-        renderOwnerStats();
-        showToast("تم تحديث عداد الزوار بنجاح", "success");
-      }
-    });
-  }
-
   // Modal Close Buttons
   $$(".modal-close-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -1169,10 +939,6 @@ function initApp() {
       openModal("#modal-barber-login");
     }
   });
-  // Direct link to owner.html handled by href
-  $("#footer-owner-btn")?.addEventListener("click", () => {
-    window.location.href = "./owner.html";
-  });
 
   // Bottom Navigation Mobile
   $("#mob-nav-home")?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: 'smooth' }));
@@ -1186,11 +952,6 @@ function initApp() {
       openModal("#modal-barber-login");
     }
   });
-
-  // Check Hash for direct owner URL: `#owner` or `#admin`
-  if (window.location.hash === "#owner" || window.location.hash === "#admin") {
-    setTimeout(checkOwnerAccess, 500);
-  }
 
   // Mobile Menu Toggle
   const mobMenuBtn = $("#mobile-menu-toggle");

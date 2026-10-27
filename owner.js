@@ -220,7 +220,7 @@ function setupUrls() {
   const currentPath = window.location.pathname;
   const dirPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
 
-  const ownerUrl = `${currentOrigin}${dirPath}owner.html`;
+  const ownerUrl = `${currentOrigin}${dirPath}private-owner-console-7x4m.html`;
   const barberUrl = `${currentOrigin}${dirPath}barber.html`;
   const clientUrl = `${currentOrigin}${dirPath}index.html`;
 
@@ -304,7 +304,7 @@ function renderBarbersCredentials() {
   if (!container) return;
 
   barbers = safeGet("barbershop_barbers", DEFAULT_BARBERS);
-  const barberPortalUrl = document.getElementById("barber-portal-url")?.textContent || window.location.href.replace("owner.html", "barber.html");
+  const barberPortalUrl = document.getElementById("barber-portal-url")?.textContent || window.location.href.replace("private-owner-console-7x4m.html", "barber.html");
 
   if (!barbers || barbers.length === 0) {
     container.innerHTML = `<div class="empty-state">لا يوجد حلاقين مسجلين حالياً. اضغط على "إضافة حلاق جديد" بالأعلى.</div>`;
@@ -371,7 +371,7 @@ window.copyBarberCredentials = function(barberId) {
   const barber = barbers.find(b => b.id === barberId);
   if (!barber) return;
 
-  const barberPortalUrl = document.getElementById("barber-portal-url")?.textContent || window.location.href.replace("owner.html", "barber.html");
+  const barberPortalUrl = document.getElementById("barber-portal-url")?.textContent || window.location.href.replace("private-owner-console-7x4m.html", "barber.html");
 
   const message = `مرحباً يا ${barber.name} 💈
 تم تجهيز حسابك في منظومة "صالون المقص الذهبي - بن فريحة بوهران":

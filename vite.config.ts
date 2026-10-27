@@ -16,7 +16,7 @@ export default defineConfig(({ command }) => {
       rollupOptions: {
         input: {
           main: path.resolve(__dirname, 'index.html'),
-          owner: path.resolve(__dirname, 'owner.html'),
+          owner: path.resolve(__dirname, 'private-owner-console-7x4m.html'),
           barber: path.resolve(__dirname, 'barber.html'),
         },
       },

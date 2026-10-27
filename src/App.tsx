@@ -13,7 +13,6 @@ import { ClientAppointmentsLookup } from './components/ClientAppointmentsLookup'
 import { BarberDashboard } from './components/BarberDashboard';
 import { BarberLogin } from './components/BarberLogin';
 import { BarberCredentialsManager } from './components/BarberCredentialsManager';
-import { OwnerPortal } from './components/OwnerPortal';
 import { HtmlAdSlot } from './components/HtmlAdSlot';
 import { LocationSection } from './components/LocationSection';
 import { Footer } from './components/Footer';
@@ -31,7 +30,7 @@ import {
 } from './utils/storage';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'client' | 'barber' | 'owner'>('client');
+  const [currentView, setCurrentView] = useState<'client' | 'barber'>('client');
   const [barbers, setBarbers] = useState<Barber[]>(() => getStoredBarbers());
   const [services, setServices] = useState<Service[]>(() => getStoredServices());
   const [appointments, setAppointments] = useState<Appointment[]>(() => getStoredAppointments());
@@ -76,21 +75,6 @@ export default function App() {
     setVisitorStats(getVisitorStats());
   };
 
-  // Listen for private Owner URL hash
-  useEffect(() => {
-    const checkHash = () => {
-      const hash = window.location.hash.toLowerCase();
-      if (hash.includes('owner') || hash.includes('admin-portal')) {
-        setCurrentView('owner');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    };
-
-    checkHash();
-    window.addEventListener('hashchange', checkHash);
-    return () => window.removeEventListener('hashchange', checkHash);
-  }, []);
-
   // Record visit on client view mount
   useEffect(() => {
     const stats = recordVisit();
@@ -115,12 +99,6 @@ export default function App() {
   const handleOpenBarberDashboard = (barberId: string) => {
     setActiveBarberId(barberId);
     setCurrentView('barber');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleOpenOwnerPortal = () => {
-    window.location.hash = '#owner-portal';
-    setCurrentView('owner');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -151,11 +129,8 @@ export default function App() {
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans" dir="rtl">
       {/* Top Header */}
       <Header
-        currentView={currentView === 'owner' ? 'client' : currentView}
+        currentView={currentView}
         onViewChange={(view) => {
-          if (view === 'client' && window.location.hash.includes('owner')) {
-            window.location.hash = '';
-          }
           setCurrentView(view);
         }}
         pendingCount={pendingAppointmentsCount}
@@ -168,20 +143,7 @@ export default function App() {
 
       {/* Main View Router */}
       <main className="flex-1">
-        {currentView === 'owner' ? (
-          /* Separate Dedicated Owner Portal */
-          <OwnerPortal
-            barbers={barbers}
-            appointments={appointments}
-            ads={ads}
-            onNotification={addToast}
-            onBackToMainSite={() => {
-              window.location.hash = '';
-              setCurrentView('client');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-          />
-        ) : currentView === 'client' ? (
+        {currentView === 'client' ? (
           <div className="pb-16 sm:pb-0">
             {/* Ad Slot 1: Top Header Banner */}
             <HtmlAdSlot ad={topAd} className="pt-2" />
@@ -249,7 +211,6 @@ export default function App() {
         onOpenBooking={() => handleOpenBooking()}
         onOpenMyBookings={() => setIsLookupOpen(true)}
         onOpenBarberPortal={() => setCurrentView('barber')}
-        onOpenOwnerPortal={handleOpenOwnerPortal}
         totalVisits={visitorStats?.totalVisits || 1420}
       />
 

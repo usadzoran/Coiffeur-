@@ -5,7 +5,6 @@ interface FooterProps {
   onOpenBooking: () => void;
   onOpenMyBookings: () => void;
   onOpenBarberPortal: () => void;
-  onOpenOwnerPortal: () => void;
   totalVisits?: number;
 }
 
@@ -13,7 +12,6 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenBooking,
   onOpenMyBookings,
   onOpenBarberPortal,
-  onOpenOwnerPortal,
   totalVisits = 1420,
 }) => {
   return (
@@ -64,15 +62,6 @@ export const Footer: React.FC<FooterProps> = ({
               <li>
                 <button onClick={onOpenBarberPortal} className="hover:text-amber-400 transition-colors text-right text-amber-500 cursor-pointer">
                   لوحة تحكم الحلاقين للموافقة والرفض
-                </button>
-              </li>
-              <li className="pt-1">
-                <button
-                  onClick={onOpenOwnerPortal}
-                  className="text-neutral-500 hover:text-amber-400 transition-colors text-right text-[11px] flex items-center gap-1 cursor-pointer"
-                  title="الرابط الخاص المنفصل لصاحب الموقع"
-                >
-                  <span>🔒 الرابط الخاص بصاحب الموقع</span>
                 </button>
               </li>
             </ul>
