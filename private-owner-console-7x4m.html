@@ -556,11 +556,11 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
               <div>
                 <label style="display: block; font-size: 0.82rem; color: #fbbf24; margin-bottom: 4px;">اسم الدخول (Username) *</label>
-                <input type="text" id="add-barber-username" class="form-control" placeholder="اسم مستخدم جديد" required style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #38bdf8; font-family: monospace; padding: 8px 12px; border-radius: 8px;">
+                <input type="text" id="add-barber-username" class="form-control" placeholder="مثال: amine.barber" pattern="[a-zA-Z0-9._-]{3,30}" minlength="3" maxlength="30" autocomplete="off" required style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #38bdf8; font-family: monospace; padding: 8px 12px; border-radius: 8px;">
               </div>
               <div>
                 <label style="display: block; font-size: 0.82rem; color: #fbbf24; margin-bottom: 4px;">كلمة السر (Password) *</label>
-                <input type="text" id="add-barber-password" class="form-control" placeholder="أدخل كلمة مرور مؤقتة (8 أحرف على الأقل)" required style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #38bdf8; font-family: monospace; padding: 8px 12px; border-radius: 8px;">
+                <input type="password" id="add-barber-password" class="form-control" placeholder="أدخل كلمة مرور مؤقتة (8 أحرف على الأقل)" minlength="8" autocomplete="new-password" required style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #38bdf8; font-family: monospace; padding: 8px 12px; border-radius: 8px;">
               </div>
             </div>
             <div style="margin-bottom: 16px;">

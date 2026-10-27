@@ -586,9 +586,14 @@ function setupEventListeners() {
   if (addBarberForm) {
     addBarberForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      barbers = safeGet("barbershop_barbers", DEFAULT_BARBERS);
+      barbers = safeGet("barbershop_barbers", []);
 
       const username = document.getElementById("add-barber-username").value.trim().toLowerCase();
+      const submitButton = addBarberForm.querySelector("button[type='submit']");
+      if (!username || !/^[a-z0-9._-]{3,30}$/.test(username)) {
+        showToast("اسم الدخول يجب أن يكون 3 إلى 30 حرفاً إنجليزياً أو رقماً، دون مسافات.", "warning");
+        return;
+      }
       // Check if username taken
       if (barbers.some(b => b.username?.toLowerCase() === username)) {
         showToast("اسم الدخول هذا مستخدم مسبقاً، يرجى اختيار اسم مستخدم آخر", "error");
@@ -600,33 +605,53 @@ function setupEventListeners() {
         showToast("كلمة مرور الحلاق يجب أن تكون 8 أحرف على الأقل", "warning");
         return;
       }
-      const account = await createBarberAccount(username, password);
-      const newBarber = {
-        id: `barber-${Date.now()}`,
-        name: document.getElementById("add-barber-name").value.trim(),
-        role: document.getElementById("add-barber-role").value.trim(),
-        phone: document.getElementById("add-barber-phone").value.trim(),
-        experience: document.getElementById("add-barber-exp").value.trim() || "حلاق محترف",
-        username,
-        authEmail: account.email,
-        authUid: account.uid,
-        image: document.getElementById("add-barber-image").value.trim() || "./public/images/barber_karim_1792939478110.jpg",
-        available: true,
-        workingHours: "09:00 ص - 21:00 م"
-      };
-      barbers.push(newBarber);
-      const savedInFirebase = await saveBarberCloud(newBarber);
-      if (!savedInFirebase) {
-        showToast("تعذر حفظ الحلاق في Firebase. لم يتم إكمال الإضافة.", "error");
-        return;
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "جارٍ إنشاء الحساب والحفظ...";
       }
-      const waPhone = newBarber.phone.replace(/\D/g, "").replace(/^0/, "213");
-      const message = encodeURIComponent(`مرحباً ${newBarber.name}، تم إنشاء حسابك في صالون المقص الذهبي.\nرابط الدخول: ${window.location.origin}${window.location.pathname.replace(/private-owner-console-7x4m\.html$/, "barber.html")}\nاسم المستخدم: ${username}\nكلمة المرور: ${password}`);
-      window.open(`https://wa.me/${waPhone}?text=${message}`, "_blank", "noopener");
-      showToast(`تم إنشاء حساب ${newBarber.name} في Firebase وفتح رسالة واتساب جاهزة للإرسال`, "success");
-      window.closeModal("#modal-add-barber");
-      addBarberForm.reset();
-      renderBarbersCredentials();
+      try {
+        const account = await createBarberAccount(username, password);
+        const newBarber = {
+          id: `barber-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          name: document.getElementById("add-barber-name").value.trim(),
+          role: document.getElementById("add-barber-role").value.trim(),
+          phone: document.getElementById("add-barber-phone").value.trim(),
+          experience: document.getElementById("add-barber-exp").value.trim() || "حلاق محترف",
+          username,
+          authEmail: account.email,
+          authUid: account.uid,
+          image: document.getElementById("add-barber-image").value.trim() || "",
+          available: true,
+          workingHours: "09:00 ص - 21:00 م"
+        };
+        const savedInFirebase = await saveBarberCloud(newBarber);
+        if (!savedInFirebase) throw new Error("تعذر حفظ سجل الحلاق في Firebase. تحقق من قواعد Realtime Database.");
+        barbers = [...barbers.filter((item) => item.id !== newBarber.id), newBarber];
+        safeSet("barbershop_barbers", barbers);
+        const waPhone = newBarber.phone.replace(/\D/g, "").replace(/^0/, "213");
+        const message = encodeURIComponent(`مرحباً ${newBarber.name}، تم إنشاء حسابك في صالون المقص الذهبي.\nرابط الدخول: ${window.location.origin}${window.location.pathname.replace(/private-owner-console-7x4m\.html$/, "barber.html")}\nاسم المستخدم: ${username}\nكلمة المرور: ${password}`);
+        if (waPhone) window.open(`https://wa.me/${waPhone}?text=${message}`, "_blank", "noopener");
+        showToast(`تم حفظ ${newBarber.name} في Firebase وفتح رسالة واتساب جاهزة`, "success");
+        window.closeModal("#modal-add-barber");
+        addBarberForm.reset();
+        renderBarbersCredentials();
+      } catch (error) {
+        const code = error?.code || "";
+        const message = code === "auth/email-already-in-use"
+          ? "اسم الدخول مستخدم في Firebase من قبل. اختر اسماً آخر."
+          : code === "auth/operation-not-allowed"
+            ? "تسجيل الدخول بالبريد وكلمة المرور غير مفعّل في Firebase Authentication."
+            : code === "auth/invalid-api-key"
+              ? "مفتاح Firebase غير صالح. تحقق من إعدادات المشروع."
+              : error?.message || "تعذر إنشاء حساب الحلاق أو حفظه في Firebase.";
+        console.error("Barber creation failed:", error);
+        showToast(message, "error");
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = "حفظ وإضافة الحلاق فوراً";
+        }
+      }
     });
   }
 
