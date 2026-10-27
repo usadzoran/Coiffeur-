@@ -11,7 +11,9 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
 } from "firebase/auth";
 import { 
   getDatabase, 
@@ -40,6 +42,10 @@ export const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const OWNER_EMAIL = "Wahablila31000@gmail.com";
+// الاحتفاظ بتسجيل الدخول بعد Refresh والتنقل بين صفحات GitHub Pages.
+const persistenceReady = setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.warn("Firebase session persistence unavailable:", error);
+});
 
 // حساب ثانوي لإنشاء حسابات الحلاقين دون تسجيل خروج المالك من لوحة التحكم.
 const provisioningApp = initializeApp(firebaseConfig, "barber-account-provisioning");
@@ -54,10 +60,12 @@ export function barberAuthEmail(username) {
 }
 
 export async function signInOwner(password) {
+  await persistenceReady;
   return signInWithEmailAndPassword(auth, OWNER_EMAIL, password);
 }
 
 export async function registerOwner(password) {
+  await persistenceReady;
   const credential = await createUserWithEmailAndPassword(auth, OWNER_EMAIL, password);
   await set(ref(rtdb, `owners/${credential.user.uid}`), {
     email: OWNER_EMAIL,
@@ -68,6 +76,7 @@ export async function registerOwner(password) {
 }
 
 export async function signInBarber(username, password) {
+  await persistenceReady;
   const email = barberAuthEmail(username);
   const credential = await signInWithEmailAndPassword(auth, email, password);
   const snapshot = await get(ref(rtdb, "barbers"));
