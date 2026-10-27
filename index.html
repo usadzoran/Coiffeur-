@@ -46,9 +46,6 @@
         </nav>
 
         <div class="header-actions">
-          <a href="./owner.html" id="nav-owner-btn" class="btn-xs" title="لوحة تحكم صاحب الصالون المستقلة" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
-            ⚙️ لوحة المالك
-          </a>
           <button type="button" id="nav-book-btn" class="btn-primary btn-sm">
             <span>احجز الآن</span>
           </button>
@@ -76,7 +73,6 @@
         <a href="#location" class="drawer-link">📍 الموقع وخريطة الطريق</a>
         <button type="button" onclick="openModal('#modal-lookup')" class="drawer-link" style="text-align:right;cursor:pointer;">🔍 متابعة حجوزاتي</button>
         <a href="./barber.html" class="drawer-link" style="color:#38bdf8;">👤 بوابة الحلاقين (بوابة مستقلة)</a>
-        <a href="./owner.html" class="drawer-link" style="color:#f59e0b; font-weight:700;">⚙️ لوحة صاحب الصالون (رابط منفصل)</a>
       </div>
     </div>
 
@@ -301,10 +297,9 @@
           </div>
 
           <div class="footer-col">
-            <h4>منطقة الطاقم والإدارة</h4>
+            <h4>منطقة الطاقم</h4>
             <ul class="footer-links">
               <li><a href="./barber.html">🔐 بوابة الحلاقين الخاصة (كريم، يوسف، سامي)</a></li>
-              <li><a href="./owner.html" style="color:#fbbf24; font-weight:700;">👑 رابط صاحب الصالون المستقل (إدارة وإعلانات)</a></li>
               <li><a href="https://maps.app.goo.gl/ffo11T6RT3GXEPrj7" target="_blank" rel="noopener noreferrer">📍 اتجاهات Google Maps</a></li>
             </ul>
           </div>
@@ -588,25 +583,7 @@
       </div>
     </div>
 
-    <!-- MODAL: OWNER PORTAL -->
-    <div id="modal-owner-portal" class="modal-backdrop">
-      <div class="modal-card modal-card-lg">
-        <div class="modal-header">
-          <h3 class="modal-title">
-            <span>👑 بوابة صاحب الصالون (إدارة كاملة)</span>
-          </h3>
-          <button type="button" class="modal-close-btn">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div style="background: linear-gradient(135deg, rgba(217,119,6,0.18) 0%, rgba(245,158,11,0.08) 100%); border: 1.5px solid #f59e0b; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
-            <div>
-              <strong style="color: #fbbf24; font-size: 0.95rem;">👑 رابط صاحب الموقع المنفصل والمستقل:</strong>
-              <p style="font-size: 0.8rem; color: #d4d4d8; margin: 2px 0 0;">تم تجهيز صفحة مستقلة تماماً للمالك لإدارة الحلاقين وكلمات السر والإعلانات وعداد الزوار.</p>
-            </div>
-            <a href="./owner.html" class="btn-primary btn-sm" style="text-decoration: none; padding: 8px 16px; font-weight:800;">
-              فتح صفحة المالك المنفصلة (owner.html) 🚀
-            </a>
-          </div>
+
 
           <div class="owner-tabs-nav">
             <button type="button" class="owner-tab-btn active" data-target="#tab-owner-barbers">إدارة الحلاقين والحسابات</button>
