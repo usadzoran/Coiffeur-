@@ -379,7 +379,14 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast(`أهلاً بك يا ${match.name}! تم تسجيل الدخول عبر Firebase 💈`, "success");
         showDashboardView();
       } catch (error) {
-        showToast("اسم المستخدم أو كلمة المرور غير صحيحة، أو لم يجهز المالك الحساب بعد.", "error");
+        const code = error?.code || "";
+        const message = code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found"
+          ? "اسم المستخدم أو كلمة المرور غير صحيحة."
+          : code === "PERMISSION_DENIED" || code === "permission-denied"
+            ? "تم قبول بيانات الدخول، لكن Firebase يمنع قراءة ملف الحلاق. يجب تحديث قواعد Realtime Database."
+            : error?.message || "تعذر تسجيل الدخول. حاول مرة أخرى.";
+        console.error("Barber login failed:", error);
+        showToast(message, "error");
       }
     });
   }

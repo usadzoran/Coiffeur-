@@ -23,9 +23,12 @@ import {
   ref, 
   set, 
   get, 
-  update, 
-  remove, 
-  onValue 
+  update,
+  remove,
+  onValue,
+  query,
+  orderByChild,
+  equalTo
 } from "firebase/database";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
@@ -90,13 +93,14 @@ export async function registerOwner(password) {
 
 export async function signInBarber(username, password) {
   await persistenceReady;
-  const email = barberAuthEmail(username);
+  const normalizedUsername = String(username || "").trim().toLowerCase();
+  const email = barberAuthEmail(normalizedUsername);
   const credential = await signInWithEmailAndPassword(auth, email, password);
-  const snapshot = await get(ref(rtdb, "barbers"));
+  const barberQuery = query(ref(rtdb, "barbers"), orderByChild("authUid"), equalTo(credential.user.uid));
+  const snapshot = await get(barberQuery);
   const data = snapshot.exists() ? snapshot.val() : {};
-  const barber = Object.keys(data)
-    .map((id) => ({ id, ...data[id] }))
-    .find((item) => item.authUid === credential.user.uid);
+  const barberId = Object.keys(data)[0];
+  const barber = barberId ? { id: barberId, ...data[barberId] } : null;
   if (!barber) {
     await signOut(auth);
     throw new Error("تم التحقق من الحساب لكن ملف الحلاق غير موجود في قاعدة البيانات.");
