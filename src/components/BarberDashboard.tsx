@@ -834,13 +834,13 @@ export const BarberDashboard: React.FC<BarberDashboardProps> = ({
                           </div>
                         ) : (
                           /* Standard Action Buttons */
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                             {appt.status === 'pending' && (
                               <>
                                 <button
                                   type="button"
                                   onClick={() => handleAccept(appt)}
-                                  className="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                                  className="w-full sm:flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
                                   <Check className="w-4 h-4" />
                                   <span>قبول الموعد وتأكيده</span>

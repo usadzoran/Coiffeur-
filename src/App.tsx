@@ -32,17 +32,17 @@ import {
 
 export default function App() {
   const [currentView, setCurrentView] = useState<'client' | 'barber' | 'owner'>('client');
-  const [barbers, setBarbers] = useState<Barber[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [barbers, setBarbers] = useState<Barber[]>(() => getStoredBarbers());
+  const [services, setServices] = useState<Service[]>(() => getStoredServices());
+  const [appointments, setAppointments] = useState<Appointment[]>(() => getStoredAppointments());
   const [activeBarberId, setActiveBarberId] = useState<string>('barber-1');
 
   // Ads & Visitor Stats
-  const [ads, setAds] = useState<AdSlot[]>([]);
-  const [visitorStats, setVisitorStats] = useState<VisitorStats>(getVisitorStats());
+  const [ads, setAds] = useState<AdSlot[]>(() => getStoredAds());
+  const [visitorStats, setVisitorStats] = useState<VisitorStats>(() => getVisitorStats());
 
   // Authentication Session
-  const [authSession, setAuthSession] = useState<AuthSession | null>(getCurrentSession());
+  const [authSession, setAuthSession] = useState<AuthSession | null>(() => getCurrentSession());
   const [isCredentialsManagerOpen, setIsCredentialsManagerOpen] = useState<boolean>(false);
 
   // Modals state
@@ -182,7 +182,7 @@ export default function App() {
             }}
           />
         ) : currentView === 'client' ? (
-          <div>
+          <div className="pb-16 sm:pb-0">
             {/* Ad Slot 1: Top Header Banner */}
             <HtmlAdSlot ad={topAd} className="pt-2" />
 
@@ -250,8 +250,28 @@ export default function App() {
         onOpenMyBookings={() => setIsLookupOpen(true)}
         onOpenBarberPortal={() => setCurrentView('barber')}
         onOpenOwnerPortal={handleOpenOwnerPortal}
-        totalVisits={visitorStats.totalVisits}
+        totalVisits={visitorStats?.totalVisits || 1420}
       />
+
+      {/* Mobile Sticky Bottom Action Bar (Phones only, client view) */}
+      {currentView === 'client' && (
+        <div className="fixed bottom-0 inset-x-0 z-30 sm:hidden bg-neutral-950/95 backdrop-blur-md border-t border-neutral-800 p-2.5 px-4 shadow-2xl flex items-center justify-between gap-2.5">
+          <button
+            onClick={() => handleOpenBooking()}
+            className="flex-1 py-3 px-4 bg-gradient-to-r from-amber-400 to-amber-500 active:from-amber-500 active:to-amber-600 text-neutral-950 font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+          >
+            <span>احجز موعدك الآن</span>
+          </button>
+
+          <button
+            onClick={() => setIsLookupOpen(true)}
+            className="py-3 px-3.5 bg-neutral-900 border border-neutral-800 text-neutral-200 active:bg-neutral-800 font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0"
+            title="متابعة الحجوزات"
+          >
+            <span>حجوزاتي</span>
+          </button>
+        </div>
+      )}
 
       {/* Booking Modal */}
       <BookingModal

@@ -31,6 +31,8 @@ import {
   getVisitorStats,
   getStoredCredentials,
   updateBarberCredential,
+  safeSessionGet,
+  safeSessionSet,
 } from '../utils/storage';
 
 interface OwnerPortalProps {
@@ -54,7 +56,7 @@ export const OwnerPortal: React.FC<OwnerPortalProps> = ({
 
   // Security Gate Password for the Owner
   const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
-    return sessionStorage.getItem('owner_portal_unlocked') === 'true';
+    return safeSessionGet('owner_portal_unlocked') === 'true';
   });
   const [adminPasswordInput, setAdminPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
@@ -93,7 +95,7 @@ export const OwnerPortal: React.FC<OwnerPortalProps> = ({
     const ownerCred = credentials.find((c) => c.role === 'owner') || { password: 'admin123' };
     if (adminPasswordInput.trim() === ownerCred.password || adminPasswordInput.trim() === 'admin123') {
       setIsUnlocked(true);
-      sessionStorage.setItem('owner_portal_unlocked', 'true');
+      safeSessionSet('owner_portal_unlocked', 'true');
       setPasswordError('');
       onNotification('مرحباً بك في واجهة إدارة صاحب الصالون!', 'success');
     } else {

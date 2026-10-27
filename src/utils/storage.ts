@@ -5,14 +5,84 @@ const APPOINTMENTS_KEY = 'golden_shears_appointments_v1';
 const BARBERS_KEY = 'golden_shears_barbers_v1';
 const SERVICES_KEY = 'golden_shears_services_v1';
 
+// Safe in-memory fallbacks when localStorage / sessionStorage are restricted or throw
+const memoryStorage = new Map<string, string>();
+const memorySessionStorage = new Map<string, string>();
+
+export const safeGet = (key: string): string | null => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem(key);
+    }
+  } catch {
+    // Storage restricted or disabled
+  }
+  return memoryStorage.get(key) ?? null;
+};
+
+export const safeSet = (key: string, value: string): void => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  } catch {
+    // Storage restricted or disabled
+  }
+  memoryStorage.set(key, value);
+};
+
+export const safeRemove = (key: string): void => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(key);
+    }
+  } catch {
+    // Storage restricted or disabled
+  }
+  memoryStorage.delete(key);
+};
+
+export const safeSessionGet = (key: string): string | null => {
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      return window.sessionStorage.getItem(key);
+    }
+  } catch {
+    // Storage restricted or disabled
+  }
+  return memorySessionStorage.get(key) ?? null;
+};
+
+export const safeSessionSet = (key: string, value: string): void => {
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.setItem(key, value);
+    }
+  } catch {
+    // Storage restricted or disabled
+  }
+  memorySessionStorage.set(key, value);
+};
+
+const dispatchStorageUpdate = () => {
+  try {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('barbershop-storage-updated'));
+    }
+  } catch {
+    // Ignore dispatch error in constrained iframe
+  }
+};
+
 export const getStoredBarbers = (): Barber[] => {
   try {
-    const raw = localStorage.getItem(BARBERS_KEY);
+    const raw = safeGet(BARBERS_KEY);
     if (!raw) {
-      localStorage.setItem(BARBERS_KEY, JSON.stringify(INITIAL_BARBERS));
+      safeSet(BARBERS_KEY, JSON.stringify(INITIAL_BARBERS));
       return INITIAL_BARBERS;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_BARBERS;
   } catch {
     return INITIAL_BARBERS;
   }
@@ -20,12 +90,13 @@ export const getStoredBarbers = (): Barber[] => {
 
 export const getStoredServices = (): Service[] => {
   try {
-    const raw = localStorage.getItem(SERVICES_KEY);
+    const raw = safeGet(SERVICES_KEY);
     if (!raw) {
-      localStorage.setItem(SERVICES_KEY, JSON.stringify(INITIAL_SERVICES));
+      safeSet(SERVICES_KEY, JSON.stringify(INITIAL_SERVICES));
       return INITIAL_SERVICES;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_SERVICES;
   } catch {
     return INITIAL_SERVICES;
   }
@@ -33,20 +104,21 @@ export const getStoredServices = (): Service[] => {
 
 export const getStoredAppointments = (): Appointment[] => {
   try {
-    const raw = localStorage.getItem(APPOINTMENTS_KEY);
+    const raw = safeGet(APPOINTMENTS_KEY);
     if (!raw) {
-      localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(INITIAL_APPOINTMENTS));
+      safeSet(APPOINTMENTS_KEY, JSON.stringify(INITIAL_APPOINTMENTS));
       return INITIAL_APPOINTMENTS;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : INITIAL_APPOINTMENTS;
   } catch {
     return INITIAL_APPOINTMENTS;
   }
 };
 
 export const saveAppointments = (appointments: Appointment[]) => {
-  localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(appointments));
-  window.dispatchEvent(new Event('barbershop-storage-updated'));
+  safeSet(APPOINTMENTS_KEY, JSON.stringify(appointments));
+  dispatchStorageUpdate();
 };
 
 export const addAppointment = (newAppt: Omit<Appointment, 'id' | 'createdAt' | 'status'>): Appointment => {
@@ -90,12 +162,12 @@ export const updateAppointmentStatus = (
 };
 
 export const resetToDefaults = () => {
-  localStorage.setItem(BARBERS_KEY, JSON.stringify(INITIAL_BARBERS));
-  localStorage.setItem(SERVICES_KEY, JSON.stringify(INITIAL_SERVICES));
-  localStorage.setItem(APPOINTMENTS_KEY, JSON.stringify(INITIAL_APPOINTMENTS));
-  localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(DEFAULT_CREDENTIALS));
-  localStorage.removeItem(SESSION_KEY);
-  window.dispatchEvent(new Event('barbershop-storage-updated'));
+  safeSet(BARBERS_KEY, JSON.stringify(INITIAL_BARBERS));
+  safeSet(SERVICES_KEY, JSON.stringify(INITIAL_SERVICES));
+  safeSet(APPOINTMENTS_KEY, JSON.stringify(INITIAL_APPOINTMENTS));
+  safeSet(CREDENTIALS_KEY, JSON.stringify(DEFAULT_CREDENTIALS));
+  safeRemove(SESSION_KEY);
+  dispatchStorageUpdate();
 };
 
 const CREDENTIALS_KEY = 'golden_shears_credentials_v1';
@@ -136,20 +208,21 @@ import { BarberCredential, AuthSession } from '../types/barber';
 
 export const getStoredCredentials = (): BarberCredential[] => {
   try {
-    const raw = localStorage.getItem(CREDENTIALS_KEY);
+    const raw = safeGet(CREDENTIALS_KEY);
     if (!raw) {
-      localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(DEFAULT_CREDENTIALS));
+      safeSet(CREDENTIALS_KEY, JSON.stringify(DEFAULT_CREDENTIALS));
       return DEFAULT_CREDENTIALS;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_CREDENTIALS;
   } catch {
     return DEFAULT_CREDENTIALS;
   }
 };
 
 export const saveCredentials = (credentials: BarberCredential[]) => {
-  localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(credentials));
-  window.dispatchEvent(new Event('barbershop-storage-updated'));
+  safeSet(CREDENTIALS_KEY, JSON.stringify(credentials));
+  dispatchStorageUpdate();
 };
 
 export const updateBarberCredential = (
@@ -174,7 +247,7 @@ export const updateBarberCredential = (
 
 export const getCurrentSession = (): AuthSession | null => {
   try {
-    const raw = localStorage.getItem(SESSION_KEY);
+    const raw = safeGet(SESSION_KEY);
     if (!raw) return null;
     return JSON.parse(raw);
   } catch {
@@ -184,11 +257,11 @@ export const getCurrentSession = (): AuthSession | null => {
 
 export const setCurrentSession = (session: AuthSession | null) => {
   if (session) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    safeSet(SESSION_KEY, JSON.stringify(session));
   } else {
-    localStorage.removeItem(SESSION_KEY);
+    safeRemove(SESSION_KEY);
   }
-  window.dispatchEvent(new Event('barbershop-storage-updated'));
+  dispatchStorageUpdate();
 };
 
 export const loginBarber = (usernameInput: string, passwordInput: string): { success: boolean; session?: AuthSession; message?: string } => {
@@ -236,7 +309,7 @@ export const addNewBarber = (
     id: newId,
   };
   const updatedBarbers = [...currentBarbers, newBarber];
-  localStorage.setItem(BARBERS_KEY, JSON.stringify(updatedBarbers));
+  safeSet(BARBERS_KEY, JSON.stringify(updatedBarbers));
 
   const currentCreds = getStoredCredentials();
   const newCred: BarberCredential = {
@@ -249,20 +322,20 @@ export const addNewBarber = (
   const updatedCreds = [...currentCreds, newCred];
   saveCredentials(updatedCreds);
 
-  window.dispatchEvent(new Event('barbershop-storage-updated'));
+  dispatchStorageUpdate();
   return { barber: newBarber, credential: newCred };
 };
 
 export const deleteBarber = (barberId: string): boolean => {
   const currentBarbers = getStoredBarbers();
   const updatedBarbers = currentBarbers.filter((b) => b.id !== barberId);
-  localStorage.setItem(BARBERS_KEY, JSON.stringify(updatedBarbers));
+  safeSet(BARBERS_KEY, JSON.stringify(updatedBarbers));
 
   const currentCreds = getStoredCredentials();
   const updatedCreds = currentCreds.filter((c) => c.barberId !== barberId);
   saveCredentials(updatedCreds);
 
-  window.dispatchEvent(new Event('barbershop-storage-updated'));
+  dispatchStorageUpdate();
   return true;
 };
 
@@ -317,20 +390,21 @@ export const DEFAULT_ADS: AdSlot[] = [
 
 export const getStoredAds = (): AdSlot[] => {
   try {
-    const raw = localStorage.getItem(ADS_KEY);
+    const raw = safeGet(ADS_KEY);
     if (!raw) {
-      localStorage.setItem(ADS_KEY, JSON.stringify(DEFAULT_ADS));
+      safeSet(ADS_KEY, JSON.stringify(DEFAULT_ADS));
       return DEFAULT_ADS;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_ADS;
   } catch {
     return DEFAULT_ADS;
   }
 };
 
 export const saveAds = (ads: AdSlot[]) => {
-  localStorage.setItem(ADS_KEY, JSON.stringify(ads));
-  window.dispatchEvent(new Event('barbershop-storage-updated'));
+  safeSet(ADS_KEY, JSON.stringify(ads));
+  dispatchStorageUpdate();
 };
 
 export const updateAdSlot = (id: string, htmlContent: string, enabled: boolean): boolean => {
@@ -359,7 +433,7 @@ const CLIENT_UUID_KEY = 'golden_shears_client_uuid_v1';
 export const getVisitorStats = (): VisitorStats => {
   const todayStr = new Date().toISOString().split('T')[0];
   try {
-    const raw = localStorage.getItem(VISITOR_KEY);
+    const raw = safeGet(VISITOR_KEY);
     if (!raw) {
       const initial: VisitorStats = {
         totalVisits: 1420,
@@ -376,10 +450,17 @@ export const getVisitorStats = (): VisitorStats => {
           { date: todayStr, count: 47 },
         ],
       };
-      localStorage.setItem(VISITOR_KEY, JSON.stringify(initial));
+      safeSet(VISITOR_KEY, JSON.stringify(initial));
       return initial;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed.totalVisits === 'number' ? parsed : {
+      totalVisits: 1420,
+      uniqueVisitors: 890,
+      todayVisits: 47,
+      lastVisitDate: todayStr,
+      history: [],
+    };
   } catch {
     return {
       totalVisits: 1420,
@@ -395,44 +476,48 @@ export const recordVisit = (): VisitorStats => {
   const stats = getVisitorStats();
   const todayStr = new Date().toISOString().split('T')[0];
 
-  // Check if unique
-  let isUnique = false;
-  if (!localStorage.getItem(CLIENT_UUID_KEY)) {
-    localStorage.setItem(CLIENT_UUID_KEY, `user-${Date.now()}-${Math.random()}`);
-    isUnique = true;
-  }
+  try {
+    // Check if unique
+    let isUnique = false;
+    if (!safeGet(CLIENT_UUID_KEY)) {
+      safeSet(CLIENT_UUID_KEY, `user-${Date.now()}-${Math.random()}`);
+      isUnique = true;
+    }
 
-  // Session check to avoid overcounting on fast page refresh
-  const lastRecorded = sessionStorage.getItem('session_visited_recorded');
-  if (lastRecorded) {
+    // Session check to avoid overcounting on fast page refresh
+    const lastRecorded = safeSessionGet('session_visited_recorded');
+    if (lastRecorded) {
+      return stats;
+    }
+    safeSessionSet('session_visited_recorded', 'true');
+
+    const newTotal = (stats?.totalVisits || 1420) + 1;
+    const newUnique = isUnique ? (stats?.uniqueVisitors || 890) + 1 : (stats?.uniqueVisitors || 890);
+    const newToday = stats?.lastVisitDate === todayStr ? (stats?.todayVisits || 0) + 1 : 1;
+
+    // Update history
+    const history = [...(stats?.history || [])];
+    const todayIndex = history.findIndex((h) => h.date === todayStr);
+    if (todayIndex >= 0) {
+      history[todayIndex].count = newToday;
+    } else {
+      history.push({ date: todayStr, count: newToday });
+    }
+
+    const updatedStats: VisitorStats = {
+      totalVisits: newTotal,
+      uniqueVisitors: newUnique,
+      todayVisits: newToday,
+      lastVisitDate: todayStr,
+      history: history.slice(-7), // keep last 7 days
+    };
+
+    safeSet(VISITOR_KEY, JSON.stringify(updatedStats));
+    dispatchStorageUpdate();
+    return updatedStats;
+  } catch {
     return stats;
   }
-  sessionStorage.setItem('session_visited_recorded', 'true');
-
-  const newTotal = stats.totalVisits + 1;
-  const newUnique = isUnique ? stats.uniqueVisitors + 1 : stats.uniqueVisitors;
-  const newToday = stats.lastVisitDate === todayStr ? stats.todayVisits + 1 : 1;
-
-  // Update history
-  const history = [...(stats.history || [])];
-  const todayIndex = history.findIndex((h) => h.date === todayStr);
-  if (todayIndex >= 0) {
-    history[todayIndex].count = newToday;
-  } else {
-    history.push({ date: todayStr, count: newToday });
-  }
-
-  const updatedStats: VisitorStats = {
-    totalVisits: newTotal,
-    uniqueVisitors: newUnique,
-    todayVisits: newToday,
-    lastVisitDate: todayStr,
-    history: history.slice(-7), // keep last 7 days
-  };
-
-  localStorage.setItem(VISITOR_KEY, JSON.stringify(updatedStats));
-  window.dispatchEvent(new Event('barbershop-storage-updated'));
-  return updatedStats;
 };
 
 

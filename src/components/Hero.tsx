@@ -36,10 +36,10 @@ export const Hero: React.FC<HeroProps> = ({
         <div className="absolute inset-0 bg-gradient-to-r from-neutral-950 via-neutral-950/70 to-neutral-950/50" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 lg:py-28">
         <div className="max-w-3xl">
-          {/* Subtle Category Kicker (no pill box) */}
-          <div className="flex items-center gap-2 text-xs font-semibold text-amber-500 uppercase tracking-widest mb-4">
+          {/* Subtle Category Kicker */}
+          <div className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs font-semibold text-amber-500 uppercase tracking-wider sm:tracking-widest mb-3 sm:mb-4">
             <span>صالون حلاقة رجالي فاخر</span>
             <span aria-hidden="true">·</span>
             <span>بن فريحة، وهران</span>
@@ -48,20 +48,20 @@ export const Hero: React.FC<HeroProps> = ({
           </div>
 
           {/* Hero Headline */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15] mb-6 text-balance">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold text-white tracking-tight leading-[1.2] mb-4 sm:mb-6 text-balance">
             فن الحلاقة الرجالية في بن فريحة (وهران)، بأيدي نخبة من أمهر الحلاقين.
           </h1>
 
           {/* Value Proposition */}
-          <p className="text-base sm:text-lg text-neutral-300 leading-relaxed mb-8 max-w-2xl font-normal">
+          <p className="text-sm sm:text-base lg:text-lg text-neutral-300 leading-relaxed mb-6 sm:mb-8 max-w-2xl font-normal">
             مرحباً بكم في صالوننا ببلدية بن فريحة، ولاية وهران. اختر حلاقك المفضل، حدد اليوم والتوقيت المناسبين لك، ويقوم الحلاق بمراجعة موعدك وقبوله وتأكيد كرسيك فورياً.
           </p>
 
           {/* Action CTAs */}
-          <div className="flex flex-wrap items-center gap-4 mb-12">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-8 sm:mb-12">
             <button
               onClick={onOpenBooking}
-              className="px-6 py-3.5 text-sm sm:text-base font-bold text-neutral-950 bg-amber-500 hover:bg-amber-400 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3.5 text-sm sm:text-base font-bold text-neutral-950 bg-amber-500 hover:bg-amber-400 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>احجز موعدك مع حلاقك الآن</span>
               <ArrowLeft className="w-4 h-4" />
@@ -69,20 +69,20 @@ export const Hero: React.FC<HeroProps> = ({
 
             <button
               onClick={onGoToBarbers}
-              className="px-5 py-3.5 text-sm font-semibold text-neutral-200 bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-700 rounded-xl transition-all whitespace-nowrap cursor-pointer"
+              className="w-full sm:w-auto px-5 py-3 text-sm font-semibold text-neutral-200 bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-700 rounded-xl transition-all flex items-center justify-center cursor-pointer"
             >
-              استعراض الحلاقين
+              استعراض الحلاقين الثلاثة
             </button>
 
             <button
               onClick={onOpenBarberPortal}
-              className="px-4 py-3.5 text-sm font-semibold text-amber-400 hover:text-amber-300 bg-amber-950/30 hover:bg-amber-950/50 border border-amber-800/60 rounded-xl transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer"
+              className="w-full sm:w-auto px-4 py-3 text-sm font-semibold text-amber-400 hover:text-amber-300 bg-amber-950/30 hover:bg-amber-950/50 border border-amber-800/60 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Shield className="w-4 h-4" />
               <span>دخول لوحة الحلاق للموافقة</span>
               {pendingCount > 0 && (
                 <span className="bg-amber-500 text-neutral-950 text-xs px-2 py-0.5 rounded-md font-bold">
-                  {pendingCount} بانتظار الرد
+                  {pendingCount}
                 </span>
               )}
             </button>

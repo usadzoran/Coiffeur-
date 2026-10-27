@@ -138,17 +138,17 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="relative w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl shadow-2xl overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4">
+      <div className="relative w-full max-w-2xl max-h-[92vh] flex flex-col bg-neutral-900 border border-neutral-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden my-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-neutral-950/60">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-neutral-800 bg-neutral-950/80 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500">
               <Calendar className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">حجز موعد حلاقة جديد</h3>
-              <p className="text-xs text-neutral-400">يخضع الموعد لمراجعة وقبول الحلاق المباشر</p>
+              <h3 className="text-sm sm:text-base font-bold text-white">حجز موعد حلاقة جديد</h3>
+              <p className="text-[11px] sm:text-xs text-neutral-400">يخضع الموعد لمراجعة وقبول الحلاق المباشر</p>
             </div>
           </div>
 
@@ -160,7 +160,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
           </button>
         </div>
 
-        {/* Modal Body */}
+        {/* Modal Body Container with safe scrolling */}
+        <div className="overflow-y-auto flex-1 p-4 sm:p-6">
         {createdAppointment ? (
           /* Confirmation Screen */
           <div className="p-8 text-center space-y-6">
@@ -472,6 +473,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             </div>
           </form>
         )}
+        </div>
       </div>
     </div>
   );
