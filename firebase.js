@@ -10,6 +10,7 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut,
   onAuthStateChanged,
   setPersistence,
@@ -41,7 +42,7 @@ export const firebaseConfig = {
 // Initialize Firebase App
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const OWNER_EMAIL = "Wahablila31000@gmail.com";
+export const OWNER_EMAIL = "wahablila31000@gmail.com";
 // الاحتفاظ بتسجيل الدخول بعد Refresh والتنقل بين صفحات GitHub Pages.
 const persistenceReady = setPersistence(auth, browserLocalPersistence).catch((error) => {
   console.warn("Firebase session persistence unavailable:", error);
@@ -62,6 +63,14 @@ export function barberAuthEmail(username) {
 export async function signInOwner(password) {
   await persistenceReady;
   return signInWithEmailAndPassword(auth, OWNER_EMAIL, password);
+}
+
+export async function resetOwnerPassword() {
+  await persistenceReady;
+  return sendPasswordResetEmail(auth, OWNER_EMAIL, {
+    url: `${window.location.origin}${window.location.pathname}`,
+    handleCodeInApp: false
+  });
 }
 
 export async function registerOwner(password) {

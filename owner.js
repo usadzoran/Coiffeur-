@@ -18,6 +18,7 @@ import {
   createBarberAccount,
   signInOwner,
   registerOwner,
+  resetOwnerPassword,
   signOutFirebase,
   subscribeAuth,
   OWNER_EMAIL
@@ -586,6 +587,15 @@ function setupEventListeners() {
       showToast("تم إنشاء حساب المالك في Firebase. احفظ كلمة المرور بأمان.", "success");
     } catch (error) {
       showToast(error.code === "auth/email-already-in-use" ? "حساب المالك موجود، استخدم زر الدخول." : "تعذر إنشاء الحساب، تحقق من إعداد Firebase.", "error");
+    }
+  });
+
+  document.getElementById("owner-forgot-password-btn")?.addEventListener("click", async () => {
+    try {
+      await resetOwnerPassword();
+      showToast("تم إرسال رابط إعادة التعيين إلى بريد المالك. افحص الوارد والرسائل غير المرغوب فيها.", "success");
+    } catch (error) {
+      showToast("تعذر إرسال الرابط. تأكد أن البريد مسجل في Firebase وأن Email/Password مفعّل.", "error");
     }
   });
 
