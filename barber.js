@@ -9,7 +9,11 @@ import {
   updateAppointmentStatusCloud,
   subscribeBarbers,
   signInBarber,
-  signOutFirebase
+  signOutFirebase,
+  changeBarberPassword,
+  saveBarberProfileCloud,
+  uploadBarberPortfolioImage,
+  deleteBarberPortfolioImage
 } from "./firebase.js";
 
 function safeGet(key, defaultVal) {
@@ -48,8 +52,76 @@ function showToast(message, type = "info") {
 }
 
 let activeBarber = null;
+let barberProfile = { portfolio: [], hairstyles: [] };
 let knownAppointmentIds = new Set();
 let appointmentsRealtimeReady = false;
+
+function loadBarberProfile() {
+  barberProfile = {
+    portfolio: Array.isArray(activeBarber?.portfolio) ? activeBarber.portfolio : [],
+    hairstyles: Array.isArray(activeBarber?.hairstyles) ? activeBarber.hairstyles : []
+  };
+  renderBarberProfile();
+}
+
+function renderBarberProfile() {
+  const grid = document.getElementById("barber-portfolio-grid");
+  if (grid) {
+    grid.innerHTML = barberProfile.portfolio.length ? barberProfile.portfolio.map((image, index) => `
+      <div style="position:relative; background:#0c0e14; border:1px solid #2d3345; border-radius:10px; padding:5px;">
+        <img src="${image.url}" alt="عمل حلاق" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:7px;">
+        <button type="button" data-portfolio-index="${index}" class="delete-portfolio-image" style="position:absolute; top:8px; left:8px; width:26px; height:26px; border:0; border-radius:50%; background:#991b1b; color:#fff; cursor:pointer;">×</button>
+      </div>
+    `).join("") : `<p style="grid-column:1/-1; color:#6b7280; font-size:.82rem;">لم تضف صوراً إلى ألبومك بعد.</p>`;
+    grid.querySelectorAll(".delete-portfolio-image").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const index = Number(button.dataset.portfolioIndex);
+        const image = barberProfile.portfolio[index];
+        if (!image || !confirm("هل تريد حذف هذه الصورة من الألبوم؟")) return;
+        try {
+          await deleteBarberPortfolioImage(image.path);
+          barberProfile.portfolio.splice(index, 1);
+          await saveBarberProfileCloud(activeBarber.id, barberProfile);
+          activeBarber.portfolio = barberProfile.portfolio;
+          renderBarberProfile();
+          showToast("تم حذف الصورة من ألبومك", "success");
+        } catch (error) {
+          showToast("تعذر حذف الصورة. تحقق من اتصال Firebase.", "error");
+        }
+      });
+    });
+  }
+
+  const fields = document.getElementById("barber-hairstyles-fields");
+  if (fields) {
+    const hairstyles = Array.from({ length: 5 }, (_, index) => barberProfile.hairstyles[index] || {});
+    fields.innerHTML = hairstyles.map((style, index) => `
+      <div style="display:grid; grid-template-columns:70px 1fr 150px; gap:8px; align-items:center;">
+        <span style="color:#fbbf24; font-size:.8rem;">${index + 1}</span>
+        <input class="form-control hairstyle-name" data-index="${index}" value="${style.name || ""}" placeholder="اسم التسريحة" required style="width:100%;">
+        <input class="form-control hairstyle-price" data-index="${index}" value="${style.price || ""}" type="number" min="0" placeholder="السعر بالدج" required style="width:100%;">
+      </div>
+    `).join("");
+  }
+}
+
+async function saveBarberProfile() {
+  if (!activeBarber) return;
+  const names = [...document.querySelectorAll(".hairstyle-name")];
+  const prices = [...document.querySelectorAll(".hairstyle-price")];
+  const hairstyles = names.map((input, index) => ({
+    name: input.value.trim(),
+    price: Number(prices[index]?.value || 0)
+  }));
+  if (hairstyles.some((style) => !style.name || style.price < 0)) {
+    showToast("أدخل اسم وسعر الأنواع الخمسة كاملة", "warning");
+    return;
+  }
+  barberProfile.hairstyles = hairstyles;
+  await saveBarberProfileCloud(activeBarber.id, barberProfile);
+  activeBarber.hairstyles = hairstyles;
+  showToast("تم حفظ التسريحات والأسعار في Firebase", "success");
+}
 
 function notifyNewBarberAppointment(appointment) {
   showToast(`لديك حجز جديد من ${appointment.clientName} يوم ${appointment.date} الساعة ${appointment.time}`, "success");
@@ -108,6 +180,7 @@ function showDashboardView() {
     hoursEl.textContent = `🕒 ساعات العمل: ${activeBarber.workingHours}`;
   }
 
+  loadBarberProfile();
   renderBarberAppointments();
 }
 
@@ -269,6 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const found = cloudBarbers.find(b => b.id === currentId);
         if (found) {
           activeBarber = found;
+          loadBarberProfile();
           showDashboardView();
         }
       }
@@ -310,5 +384,58 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("refresh-barber-appts")?.addEventListener("click", () => {
     renderBarberAppointments();
     showToast("تم تحديث المواعيد 🔄", "info");
+  });
+
+  document.getElementById("barber-password-form")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const password = document.getElementById("barber-new-password").value;
+    const confirmation = document.getElementById("barber-confirm-password").value;
+    if (password !== confirmation) {
+      showToast("كلمتا المرور غير متطابقتين", "warning");
+      return;
+    }
+    try {
+      await changeBarberPassword(password);
+      event.target.reset();
+      showToast("تم تغيير كلمة المرور بنجاح", "success");
+    } catch (error) {
+      showToast(error.code === "auth/requires-recent-login" ? "لأسباب أمنية، سجّل الخروج ثم ادخل مجدداً قبل تغيير كلمة المرور." : (error.message || "تعذر تغيير كلمة المرور"), "error");
+    }
+  });
+
+  document.getElementById("save-barber-portfolio-btn")?.addEventListener("click", async () => {
+    if (!activeBarber) return;
+    const input = document.getElementById("barber-portfolio-files");
+    const files = [...(input.files || [])];
+    if (!files.length) {
+      showToast("اختر صورة واحدة على الأقل لرفعها", "warning");
+      return;
+    }
+    if (barberProfile.portfolio.length + files.length > 20) {
+      showToast("الحد الأقصى للألبوم هو 20 صورة", "warning");
+      return;
+    }
+    try {
+      for (const file of files) {
+        const image = await uploadBarberPortfolioImage(activeBarber.id, file);
+        barberProfile.portfolio.push(image);
+      }
+      await saveBarberProfileCloud(activeBarber.id, barberProfile);
+      activeBarber.portfolio = barberProfile.portfolio;
+      input.value = "";
+      renderBarberProfile();
+      showToast("تم رفع الصور وحفظ الألبوم في Firebase", "success");
+    } catch (error) {
+      showToast(error.message || "تعذر رفع الصور إلى Firebase Storage", "error");
+    }
+  });
+
+  document.getElementById("barber-hairstyles-form")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      await saveBarberProfile();
+    } catch (error) {
+      showToast("تعذر حفظ التسريحات. تحقق من صلاحيات Firebase.", "error");
+    }
   });
 });

@@ -137,6 +137,41 @@
           <!-- Dynamically populated -->
         </div>
 
+        <!-- Barber Profile Management -->
+        <section style="margin-top: 28px; background: #141722; border: 1px solid #2d3345; border-radius: 18px; padding: 22px;">
+          <h3 style="font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 6px;">ملفي المهني</h3>
+          <p style="font-size: .82rem; color: #9ca3af; margin: 0 0 18px;">حدّث كلمة مرورك، أضف صور أعمالك، واعرض خمس تسريحات بالأسعار التي تختارها.</p>
+
+          <form id="barber-password-form" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; margin-bottom: 24px;">
+            <label style="font-size: .8rem; color: #d4d4d8;">كلمة المرور الجديدة
+              <input id="barber-new-password" type="password" minlength="8" required placeholder="8 أحرف على الأقل" class="form-control" style="width:100%; margin-top:6px;">
+            </label>
+            <label style="font-size: .8rem; color: #d4d4d8;">تأكيد كلمة المرور
+              <input id="barber-confirm-password" type="password" minlength="8" required placeholder="أعد كتابة كلمة المرور" class="form-control" style="width:100%; margin-top:6px;">
+            </label>
+            <button type="submit" class="btn-primary" style="height:42px; padding: 0 16px; border-radius:8px;">تغيير كلمة المرور</button>
+          </form>
+
+          <div style="border-top: 1px solid #272c3d; padding-top: 20px; margin-bottom: 24px;">
+            <h4 style="color:#fff; margin:0 0 6px;">ألبوم صور أعمالي</h4>
+            <p style="font-size:.78rem; color:#9ca3af; margin:0 0 12px;">يمكنك رفع صور بصيغة JPG أو PNG، بحجم أقصى 5 ميغابايت للصورة.</p>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <input id="barber-portfolio-files" type="file" accept="image/*" multiple style="color:#d4d4d8; max-width:100%;">
+              <button type="button" id="save-barber-portfolio-btn" class="btn-primary" style="padding:8px 16px; border-radius:8px;">رفع الصور وحفظ الألبوم</button>
+            </div>
+            <div id="barber-portfolio-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; margin-top:16px;"></div>
+          </div>
+
+          <div style="border-top: 1px solid #272c3d; padding-top: 20px;">
+            <h4 style="color:#fff; margin:0 0 6px;">تسريحاتي وأسعاري</h4>
+            <p style="font-size:.78rem; color:#9ca3af; margin:0 0 12px;">أدخل خمسة أنواع تسريحات وأسعارها بالدينار الجزائري.</p>
+            <form id="barber-hairstyles-form">
+              <div id="barber-hairstyles-fields" style="display:grid; gap:8px;"></div>
+              <button type="submit" class="btn-primary" style="margin-top:12px; padding:9px 18px; border-radius:8px;">حفظ التسريحات والأسعار</button>
+            </form>
+          </div>
+        </section>
+
       </section>
     </main>
 

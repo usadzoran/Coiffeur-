@@ -244,6 +244,21 @@ function renderBarbers() {
             <span class="meta-pill">🕒 ${barber.workingHours}</span>
           </div>
 
+          ${Array.isArray(barber.hairstyles) && barber.hairstyles.length ? `
+            <div style="margin:12px 0; padding:10px; background:#11141d; border-radius:10px; border:1px solid #272c3d;">
+              <div style="font-size:.78rem; color:#fbbf24; font-weight:800; margin-bottom:7px;">تسريحات وأسعار الحلاق</div>
+              <div style="display:grid; gap:5px;">
+                ${barber.hairstyles.slice(0, 5).map(style => `<div style="display:flex; justify-content:space-between; gap:8px; font-size:.78rem; color:#d4d4d8;"><span>${style.name}</span><strong style="color:#fcd34d; white-space:nowrap;">${style.price} دج</strong></div>`).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${Array.isArray(barber.portfolio) && barber.portfolio.length ? `
+            <div style="display:flex; gap:5px; overflow:hidden; margin:10px 0;">
+              ${barber.portfolio.slice(0, 4).map(image => `<img src="${image.url}" alt="من أعمال ${barber.name}" loading="lazy" style="width:54px; height:54px; object-fit:cover; border-radius:7px; border:1px solid #3f465d;">`).join('')}
+            </div>
+          ` : ''}
+
           <div class="barber-actions">
             <button 
               type="button" 

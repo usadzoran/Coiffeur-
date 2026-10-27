@@ -15,7 +15,8 @@ import {
   signOut,
   onAuthStateChanged,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  updatePassword
 } from "firebase/auth";
 import { 
   getDatabase, 
@@ -27,6 +28,7 @@ import {
   onValue 
 } from "firebase/database";
 import { getAnalytics, isSupported } from "firebase/analytics";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 // إعدادات Firebase الخاصة بالمستخدم الحقيقية
 export const firebaseConfig = {
@@ -55,6 +57,7 @@ const provisioningAuth = getAuth(provisioningApp);
 
 // Initialize Firebase Realtime Database
 export const rtdb = getDatabase(app, firebaseConfig.databaseURL);
+export const storage = getStorage(app);
 
 export function barberAuthEmail(username) {
   const safeUsername = String(username || "").trim().toLowerCase().replace(/[^a-z0-9._-]/g, "-");
@@ -121,6 +124,43 @@ export async function ensureFirebaseSession() {
   if (auth.currentUser) return auth.currentUser;
   const credential = await signInAnonymously(auth);
   return credential.user;
+}
+
+export async function changeBarberPassword(newPassword) {
+  if (!auth.currentUser || auth.currentUser.isAnonymous) {
+    throw new Error("يجب تسجيل دخول الحلاق أولاً.");
+  }
+  if (!newPassword || newPassword.length < 8) {
+    throw new Error("كلمة المرور يجب أن تكون 8 أحرف على الأقل.");
+  }
+  await updatePassword(auth.currentUser, newPassword);
+}
+
+export async function saveBarberProfileCloud(barberId, profile) {
+  if (!auth.currentUser || auth.currentUser.isAnonymous) {
+    throw new Error("جلسة الحلاق غير صالحة.");
+  }
+  await update(ref(rtdb, `barbers/${barberId}`), {
+    portfolio: profile.portfolio || [],
+    hairstyles: profile.hairstyles || [],
+    updatedAt: new Date().toISOString()
+  });
+}
+
+export async function uploadBarberPortfolioImage(barberId, file) {
+  if (!auth.currentUser || auth.currentUser.isAnonymous) {
+    throw new Error("جلسة الحلاق غير صالحة.");
+  }
+  if (!file || !file.type.startsWith("image/")) throw new Error("اختر ملف صورة صالحاً.");
+  if (file.size > 5 * 1024 * 1024) throw new Error("حجم الصورة يجب ألا يتجاوز 5 ميغابايت.");
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+  const path = `barbers/${barberId}/portfolio/${Date.now()}-${safeName}`;
+  const uploaded = await uploadBytes(storageRef(storage, path), file, { contentType: file.type });
+  return { path, url: await getDownloadURL(uploaded.ref), name: file.name };
+}
+
+export async function deleteBarberPortfolioImage(path) {
+  if (path) await deleteObject(storageRef(storage, path));
 }
 
 // Initialize Analytics conditionally (only supported in browser environments)
