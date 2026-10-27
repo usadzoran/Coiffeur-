@@ -493,7 +493,16 @@ function setupEventListeners() {
         await signInOwner(password);
         showToast("تم تسجيل الدخول عبر Firebase بنجاح", "success");
       } catch (error) {
-        showToast("بيانات الدخول غير صحيحة أو لم يتم إنشاء حساب المالك بعد", "error");
+        const code = error?.code || "";
+        const message = code === "auth/invalid-credential" || code === "auth/wrong-password"
+          ? "كلمة مرور المالك لا تطابق كلمة المرور المسجلة في Firebase. استخدم زر «نسيت كلمة المرور؟»."
+          : code === "auth/user-not-found"
+            ? "حساب المالك غير موجود في Firebase. اضغط «إنشاء حساب المالك لأول مرة»."
+            : code === "auth/operation-not-allowed"
+              ? "تسجيل الدخول بالبريد وكلمة المرور غير مفعّل في Firebase Authentication."
+              : error?.message || "تعذر تسجيل الدخول إلى Firebase.";
+        console.error("Owner login failed:", error);
+        showToast(message, "error");
       }
     });
   }
