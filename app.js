@@ -2,7 +2,18 @@
  * صالون المقص الذهبي - بن فريحة، وهران
  * Golden Scissors Barbershop - Ben Freha, Oran
  * Vanilla JavaScript Core Application
+ * متصل بـ Firebase Firestore (ykin-1241b)
  */
+
+import {
+  subscribeAppointments,
+  subscribeBarbers,
+  subscribeAds,
+  subscribeVisitors,
+  saveAppointmentCloud,
+  seedBarbersIfEmpty,
+  updateVisitorsCloud
+} from "./firebase.js";
 
 // Initial Seed Data
 const DEFAULT_BARBERS = [
@@ -224,6 +235,7 @@ const State = {
     if (!visited) {
       State.visitors += 1;
       safeSet("barbershop_visitors", State.visitors);
+      updateVisitorsCloud(State.visitors);
       sessionStorage.setItem("barbershop_visited", "true");
     }
   } catch (e) {}
@@ -534,6 +546,9 @@ function handleBookingSubmit(e) {
 
   State.appointments.unshift(newAppointment);
   safeSet("barbershop_appointments", State.appointments);
+
+  // Sync to Firebase Cloud Firestore (ykin-1241b)
+  saveAppointmentCloud(newAppointment);
 
   // Render Confirmation details
   $("#success-booking-id").textContent = bookingCode;
@@ -1035,6 +1050,47 @@ function handleSaveAds(e) {
 
 // INIT APPLICATION
 function initApp() {
+  // Seed initial barbers if empty
+  seedBarbersIfEmpty(DEFAULT_BARBERS);
+
+  // Real-time Cloud Firestore Subscriptions (ykin-1241b)
+  subscribeBarbers((cloudBarbers) => {
+    if (cloudBarbers && cloudBarbers.length > 0) {
+      State.barbers = cloudBarbers;
+      safeSet("barbershop_barbers", cloudBarbers);
+      renderBarbers();
+      updateBookingSelects();
+    }
+  });
+
+  subscribeAds((cloudAds) => {
+    if (cloudAds) {
+      State.ads = { ...State.ads, ...cloudAds };
+      safeSet("barbershop_ads", State.ads);
+      renderAds();
+    }
+  });
+
+  subscribeVisitors((cloudVisitors) => {
+    if (typeof cloudVisitors === "number") {
+      State.visitors = cloudVisitors;
+      safeSet("barbershop_visitors", cloudVisitors);
+      const visitorEl = $("#visitor-counter-val");
+      if (visitorEl) visitorEl.textContent = Number(cloudVisitors).toLocaleString("ar-DZ");
+    }
+  });
+
+  subscribeAppointments((cloudAppts) => {
+    if (cloudAppts && cloudAppts.length > 0) {
+      State.appointments = cloudAppts;
+      safeSet("barbershop_appointments", cloudAppts);
+      const lookupInput = $("#lookup-phone-input");
+      if (lookupInput && lookupInput.value.trim()) {
+        handleAppointmentsLookup(lookupInput.value.trim());
+      }
+    }
+  });
+
   // Render main page components
   renderBarbers();
   renderServices();
@@ -1152,8 +1208,10 @@ function initApp() {
       openModal("#modal-barber-login");
     }
   });
-  $("#nav-owner-btn")?.addEventListener("click", checkOwnerAccess);
-  $("#footer-owner-btn")?.addEventListener("click", checkOwnerAccess);
+  // Direct link to owner.html handled by href
+  $("#footer-owner-btn")?.addEventListener("click", () => {
+    window.location.href = "./owner.html";
+  });
 
   // Bottom Navigation Mobile
   $("#mob-nav-home")?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: 'smooth' }));

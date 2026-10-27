@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>بوابة الحلاقين - صالون المقص الذهبي بن فريحة</title>
+    <meta name="description" content="البوابة الرسمية لدخول حلاقي صالون المقص الذهبي في بن فريحة بوهران لمتابعة وقبول مواعيد الزبائن باليوم والوقت." />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+    <style>
+      .barber-page-body {
+        background: #0b0c10;
+        min-height: 100vh;
+        color: #f4f4f5;
+        font-family: 'Cairo', sans-serif;
+      }
+      .barber-navbar {
+        background: rgba(18, 20, 27, 0.95);
+        border-bottom: 1px solid #272a34;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        backdrop-filter: blur(12px);
+      }
+      .barber-nav-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body class="barber-page-body">
+    <!-- Header -->
+    <header class="barber-navbar">
+      <div class="barber-nav-container">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="background: linear-gradient(135deg, #d97706, #f59e0b); width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #111; font-weight: 900; font-size: 1.2rem;">
+            💈
+          </div>
+          <div>
+            <h1 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0;">بوابة الحلاقين الخاصة</h1>
+            <p style="font-size: 0.78rem; color: #f59e0b; margin: 0;">صالون المقص الذهبي - بن فريحة، وهران</p>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <a href="./index.html" class="btn-xs" style="background: #1e2230; color: #f4f4f5; text-decoration: none; padding: 6px 12px; border-radius: 8px;" target="_blank">
+            🌐 الموقع العام
+          </a>
+          <button type="button" id="barber-logout-btn" class="btn-xs" style="background: #2b181b; color: #f87171; border: 1px solid rgba(239,68,68,0.3); padding: 6px 12px; border-radius: 8px; cursor: pointer; display: none;">
+            خروج 🚪
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container" style="max-width: 1000px; padding-top: 24px; padding-bottom: 60px;">
+
+      <!-- LOGIN VIEW -->
+      <section id="barber-login-box" style="max-width: 440px; margin: 40px auto 20px;">
+        <div style="background: #141722; border: 1px solid #2d3244; border-radius: 20px; padding: 32px 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); text-align: center;">
+          <div style="width: 70px; height: 70px; background: rgba(245,158,11,0.1); border: 2px solid #f59e0b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 16px;">
+            ✂️
+          </div>
+          <h2 style="font-size: 1.35rem; font-weight: 800; color: #fff; margin-bottom: 6px;">تسجيل دخول الحلاق</h2>
+          <p style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 22px;">
+            أدخل اسم المستخدم وكلمة السر التي زودك بها صاحب الصالون لمتابعة حجوزاتك وقبولها فورياً.
+          </p>
+
+          <form id="barber-login-form">
+            <div style="margin-bottom: 14px; text-align: right;">
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #e4e4e7; margin-bottom: 6px;">اسم المستخدم (Username):</label>
+              <input type="text" id="barber-input-username" class="form-control" placeholder="مثال: karim" required style="width: 100%; height: 46px; background: #0c0e14; border: 1px solid #31374a; border-radius: 10px; color: #fff; padding: 0 14px; font-size: 0.95rem;">
+            </div>
+
+            <div style="margin-bottom: 18px; text-align: right;">
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #e4e4e7; margin-bottom: 6px;">كلمة المرور (Password):</label>
+              <input type="password" id="barber-input-password" class="form-control" placeholder="••••••••" required style="width: 100%; height: 46px; background: #0c0e14; border: 1px solid #31374a; border-radius: 10px; color: #fff; padding: 0 14px; font-size: 0.95rem;">
+            </div>
+
+            <button type="submit" class="btn-primary w-full" style="height: 48px; font-size: 1rem; font-weight: 800; border-radius: 10px; cursor: pointer;">
+              دخول إلى جدول مواعيدي 🚀
+            </button>
+          </form>
+
+          <div style="margin-top: 20px; padding: 12px; background: #0f1118; border-radius: 10px; border: 1px solid #232736; text-align: right; font-size: 0.78rem; color: #9ca3af;">
+            <div style="color: #fbbf24; font-weight: 700; margin-bottom: 4px;">📌 بيانات تجريبية سريعة:</div>
+            <div>• كريم: <code>karim</code> / <code>karim123</code></div>
+            <div>• يوسف: <code>youssef</code> / <code>youssef123</code></div>
+            <div>• سامي: <code>sami</code> / <code>sami123</code></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BARBER ACTIVE DASHBOARD -->
+      <section id="barber-dashboard-box" style="display: none;">
+        <!-- Barber Profile Header Card -->
+        <div style="background: linear-gradient(135deg, #151822 0%, #1c2130 100%); border: 1px solid #2d3345; border-radius: 18px; padding: 22px; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <img id="active-barber-img" src="" alt="" style="width: 68px; height: 68px; border-radius: 14px; object-fit: cover; border: 2px solid #f59e0b;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <h2 id="active-barber-name" style="font-size: 1.35rem; font-weight: 800; color: #fff; margin: 0;">--</h2>
+                  <span id="active-barber-status-badge" style="background: rgba(16,185,129,0.15); color: #34d399; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">متواجد ومتاح ✅</span>
+                </div>
+                <p id="active-barber-role" style="font-size: 0.85rem; color: #9ca3af; margin: 2px 0 0;">--</p>
+                <p id="active-barber-hours" style="font-size: 0.78rem; color: #fbbf24; margin: 2px 0 0;">🕒 ساعات العمل: 09:00 ص - 21:00 م</p>
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <div style="background: #0d0f15; border: 1px solid #232736; border-radius: 10px; padding: 10px 16px; text-align: center;">
+                <span style="font-size: 0.72rem; color: #9ca3af;">الحجوزات المقبولة</span>
+                <div id="barber-accepted-count" style="font-size: 1.3rem; font-weight: 800; color: #10b981;">0</div>
+              </div>
+              <div style="background: #0d0f15; border: 1px solid #232736; border-radius: 10px; padding: 10px 16px; text-align: center;">
+                <span style="font-size: 0.72rem; color: #9ca3af;">بانتظار قرارك</span>
+                <div id="barber-pending-count" style="font-size: 1.3rem; font-weight: 800; color: #f59e0b;">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Appointments List -->
+        <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h3 style="font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0;">قائمة طلبات المواعيد لزبائنك</h3>
+            <p style="font-size: 0.82rem; color: #9ca3af; margin: 2px 0 0;">عليك قبول أو رفض كل موعد باليوم والوقت المحدد لتأكيده للزبون</p>
+          </div>
+          <button type="button" id="refresh-barber-appts" class="action-pill-btn" style="background: #1e2230; color: #f4f4f5; padding: 6px 14px; border-radius: 8px; border: 1px solid #33394d; cursor: pointer;">
+            🔄 تحديث الطلبات
+          </button>
+        </div>
+
+        <div id="barber-appointments-cards" style="display: grid; gap: 14px;">
+          <!-- Dynamically populated -->
+        </div>
+
+      </section>
+    </main>
+
+    <div id="toast-container"></div>
+    <script type="module" src="./barber.js"></script>
+  </body>
+</html>
