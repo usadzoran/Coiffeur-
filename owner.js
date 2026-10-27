@@ -113,7 +113,7 @@ const DEFAULT_ADS = {
 let barbers = safeGet("barbershop_barbers", DEFAULT_BARBERS);
 let appointments = safeGet("barbershop_appointments", []);
 let ads = safeGet("barbershop_ads", DEFAULT_ADS);
-let visitors = safeGet("barbershop_visitors", 486);
+let visitors = safeGet("barbershop_visitors", 0);
 
 // Toast Notification
 function showToast(message, type = "info") {
@@ -273,7 +273,7 @@ ${ownerUrl}`;
 function updateMetrics() {
   barbers = safeGet("barbershop_barbers", DEFAULT_BARBERS);
   appointments = safeGet("barbershop_appointments", []);
-  visitors = safeGet("barbershop_visitors", 486);
+  visitors = safeGet("barbershop_visitors", 0);
 
   const total = appointments.length;
   const accepted = appointments.filter(a => a.status === "accepted").length;

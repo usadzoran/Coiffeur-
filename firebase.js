@@ -1,26 +1,23 @@
 /**
  * صالون المقص الذهبي - بن فريحة، وهران
- * إعداد وربط فايربيس (Firebase Firestore & Analytics)
+ * ربط مباشر وحقيقي مع Firebase Realtime Database & Analytics
  * Project: ykin-1241b
+ * Database URL: https://ykin-1241b.firebaseio.com
  */
 
 import { initializeApp } from "firebase/app";
 import { 
-  getFirestore, 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs, 
-  updateDoc, 
-  deleteDoc, 
-  onSnapshot,
-  query,
-  orderBy
-} from "firebase/firestore";
+  getDatabase, 
+  ref, 
+  set, 
+  get, 
+  update, 
+  remove, 
+  onValue 
+} from "firebase/database";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
-// Your web app's Firebase configuration (provided by user)
+// إعدادات Firebase الخاصة بالمستخدم الحقيقية
 export const firebaseConfig = {
   apiKey: "AIzaSyB_NjKpEHk26YxI-syGN85Abfk7ch6OzVE",
   authDomain: "ykin-1241b.firebaseapp.com",
@@ -35,8 +32,8 @@ export const firebaseConfig = {
 // Initialize Firebase App
 export const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore
-export const db = getFirestore(app);
+// Initialize Firebase Realtime Database
+export const rtdb = getDatabase(app, firebaseConfig.databaseURL);
 
 // Initialize Analytics conditionally (only supported in browser environments)
 export let analytics = null;
@@ -45,238 +42,275 @@ if (typeof window !== "undefined") {
     if (supported) {
       try {
         analytics = getAnalytics(app);
-        console.log("Firebase Analytics initialized successfully (G-90P60ZZSBZ)");
+        console.log("Firebase Analytics (G-90P60ZZSBZ) initialized.");
       } catch (e) {
-        console.warn("Firebase Analytics initialization skipped:", e);
+        console.warn("Firebase Analytics skipped:", e);
       }
     }
   }).catch(() => {});
 }
 
-// Collections References
-const APPOINTMENTS_COL = "appointments";
-const BARBERS_COL = "barbers";
-const SETTINGS_COL = "settings";
-
-// --- Appointments Cloud Sync ---
+// ==========================================
+// 1. إدارة المواعيد الحقيقية (Realtime Database /appointments)
+// ==========================================
 
 /**
- * Real-time listener for appointments
- * @param {Function} callback (appointmentsList) => void
- * @returns {Function} unsubscribe function
+ * الاشتراك اللحظي في جميع المواعيد من Realtime Database
+ * @param {Function} callback يتم استدعاؤه فورياً عند أي حجز جديد أو تغيير حالة
  */
 export function subscribeAppointments(callback) {
   try {
-    const q = collection(db, APPOINTMENTS_COL);
-    return onSnapshot(q, (snapshot) => {
-      const items = [];
-      snapshot.forEach((docSnap) => {
-        items.push({ id: docSnap.id, ...docSnap.data() });
-      });
-      // Sort by createdAt or date descending if available
-      items.sort((a, b) => {
-        const timeA = new Date(a.createdAt || a.date).getTime() || 0;
-        const timeB = new Date(b.createdAt || b.date).getTime() || 0;
-        return timeB - timeA;
-      });
-      callback(items);
+    const apptsRef = ref(rtdb, "appointments");
+    return onValue(apptsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const items = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key]
+        }));
+        // ترتيب المواعيد: الأحدث أولاً
+        items.sort((a, b) => {
+          const timeA = new Date(a.createdAt || a.date).getTime() || 0;
+          const timeB = new Date(b.createdAt || b.date).getTime() || 0;
+          return timeB - timeA;
+        });
+        callback(items);
+      } else {
+        callback([]);
+      }
     }, (error) => {
-      console.warn("Firestore appointments subscription warning (falling back to local):", error.message);
+      console.warn("RTDB appointments warning:", error.message);
     });
   } catch (err) {
-    console.warn("Failed to subscribe to appointments:", err);
+    console.warn("Error subscribing to RTDB appointments:", err);
     return () => {};
   }
 }
 
 /**
- * Save / create new appointment in Firestore
+ * إضافة حجز جديد حقيقي إلى Firebase Realtime Database
  */
 export async function saveAppointmentCloud(appt) {
   try {
-    const docRef = doc(db, APPOINTMENTS_COL, appt.id);
-    await setDoc(docRef, {
+    const apptRef = ref(rtdb, `appointments/${appt.id}`);
+    await set(apptRef, {
       ...appt,
       updatedAt: new Date().toISOString()
-    }, { merge: true });
+    });
+    console.log("Appointment saved to Firebase RTDB:", appt.id);
     return true;
   } catch (err) {
-    console.warn("Failed to save appointment to Firestore:", err);
+    console.warn("Failed to save appointment to Realtime Database:", err);
     return false;
   }
 }
 
 /**
- * Update appointment status (accepted / rejected / pending)
+ * تغيير حالة الموعد (قبول / رفض) من قبل الحلاق في Realtime Database
  */
 export async function updateAppointmentStatusCloud(apptId, status) {
   try {
-    const docRef = doc(db, APPOINTMENTS_COL, apptId);
-    await updateDoc(docRef, {
+    const apptRef = ref(rtdb, `appointments/${apptId}`);
+    await update(apptRef, {
       status: status,
       updatedAt: new Date().toISOString()
     });
+    console.log(`Appointment ${apptId} status updated to ${status} in RTDB`);
     return true;
   } catch (err) {
-    console.warn("Failed to update appointment status in Firestore:", err);
+    console.warn("Failed to update appointment status in Realtime Database:", err);
     return false;
   }
 }
 
 /**
- * Delete appointment from Firestore
+ * حذف موعد من Realtime Database
  */
 export async function deleteAppointmentCloud(apptId) {
   try {
-    const docRef = doc(db, APPOINTMENTS_COL, apptId);
-    await deleteDoc(docRef);
+    const apptRef = ref(rtdb, `appointments/${apptId}`);
+    await remove(apptRef);
+    console.log("Appointment deleted from RTDB:", apptId);
     return true;
   } catch (err) {
-    console.warn("Failed to delete appointment from Firestore:", err);
+    console.warn("Failed to delete appointment from Realtime Database:", err);
     return false;
   }
 }
 
-// --- Barbers Cloud Sync ---
+// ==========================================
+// 2. إدارة الحلاقين الحقيقية (Realtime Database /barbers)
+// ==========================================
 
 /**
- * Real-time listener for barbers
+ * الاشتراك اللحظي في قائمة الحلاقين
  */
 export function subscribeBarbers(callback) {
   try {
-    const q = collection(db, BARBERS_COL);
-    return onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        const items = [];
-        snapshot.forEach((docSnap) => {
-          items.push({ id: docSnap.id, ...docSnap.data() });
-        });
+    const barbersRef = ref(rtdb, "barbers");
+    return onValue(barbersRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const items = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key]
+        }));
         callback(items);
       }
     }, (error) => {
-      console.warn("Firestore barbers subscription warning:", error.message);
+      console.warn("RTDB barbers warning:", error.message);
     });
   } catch (err) {
-    console.warn("Failed to subscribe to barbers:", err);
+    console.warn("Error subscribing to RTDB barbers:", err);
     return () => {};
   }
 }
 
 /**
- * Seed initial barbers if the collection is empty
+ * تهيئة الحلاقين الـ ٣ الأساسيين في Realtime Database إذا كانت القاعدة جديدة
  */
 export async function seedBarbersIfEmpty(defaultBarbers) {
   try {
-    const snapshot = await getDocs(collection(db, BARBERS_COL));
-    if (snapshot.empty && defaultBarbers && defaultBarbers.length > 0) {
-      console.log("Seeding initial barbers to Firestore ykin-1241b...");
-      for (const barber of defaultBarbers) {
-        await setDoc(doc(db, BARBERS_COL, barber.id), barber);
-      }
-      console.log("Initial barbers seeded successfully!");
+    const barbersRef = ref(rtdb, "barbers");
+    const snapshot = await get(barbersRef);
+    if (!snapshot.exists() && defaultBarbers && defaultBarbers.length > 0) {
+      console.log("Seeding initial barbers to Firebase Realtime Database (ykin-1241b)...");
+      const seedObj = {};
+      defaultBarbers.forEach(b => {
+        seedObj[b.id] = b;
+      });
+      await set(barbersRef, seedObj);
+      console.log("Barbers seeded to Realtime Database successfully!");
     }
   } catch (err) {
-    console.warn("Barber seeding check failed or skipped:", err.message);
+    console.warn("Barbers seeding in RTDB skipped or pending:", err.message);
   }
 }
 
 /**
- * Save / Update barber in Firestore
+ * حفظ / تعديل بيانات حلاق في Realtime Database
  */
 export async function saveBarberCloud(barber) {
   try {
-    const docRef = doc(db, BARBERS_COL, barber.id);
-    await setDoc(docRef, {
+    const barberRef = ref(rtdb, `barbers/${barber.id}`);
+    await set(barberRef, {
       ...barber,
       updatedAt: new Date().toISOString()
-    }, { merge: true });
+    });
+    console.log("Barber saved to Firebase RTDB:", barber.name);
     return true;
   } catch (err) {
-    console.warn("Failed to save barber to Firestore:", err);
+    console.warn("Failed to save barber to Realtime Database:", err);
     return false;
   }
 }
 
 /**
- * Delete barber from Firestore
+ * حذف حلاق من Realtime Database
  */
 export async function deleteBarberCloud(barberId) {
   try {
-    const docRef = doc(db, BARBERS_COL, barberId);
-    await deleteDoc(docRef);
+    const barberRef = ref(rtdb, `barbers/${barberId}`);
+    await remove(barberRef);
+    console.log("Barber removed from RTDB:", barberId);
     return true;
   } catch (err) {
-    console.warn("Failed to delete barber from Firestore:", err);
+    console.warn("Failed to delete barber from Realtime Database:", err);
     return false;
   }
 }
 
-// --- Ads & Settings Cloud Sync ---
+// ==========================================
+// 3. إدارة الإعلانات الحقيقية (Realtime Database /ads)
+// ==========================================
 
 /**
- * Real-time listener for Ads configuration
+ * الاشتراك اللحظي في أكواد الإعلانات HTML
  */
 export function subscribeAds(callback) {
   try {
-    const docRef = doc(db, SETTINGS_COL, "ads");
-    return onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        callback(docSnap.data());
+    const adsRef = ref(rtdb, "ads");
+    return onValue(adsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        callback(snapshot.val());
       }
-    }, (err) => {
-      console.warn("Firestore ads subscription warning:", err.message);
+    }, (error) => {
+      console.warn("RTDB ads warning:", error.message);
     });
   } catch (err) {
-    console.warn("Failed to subscribe to ads:", err);
+    console.warn("Error subscribing to RTDB ads:", err);
     return () => {};
   }
 }
 
 /**
- * Save Ads configuration in Firestore
+ * حفظ كود الإعلانات HTML في Realtime Database
  */
 export async function saveAdsCloud(adsConfig) {
   try {
-    const docRef = doc(db, SETTINGS_COL, "ads");
-    await setDoc(docRef, adsConfig, { merge: true });
+    const adsRef = ref(rtdb, "ads");
+    await set(adsRef, adsConfig);
+    console.log("Ads published to Firebase RTDB!");
     return true;
   } catch (err) {
-    console.warn("Failed to save ads to Firestore:", err);
+    console.warn("Failed to save ads to Realtime Database:", err);
     return false;
   }
 }
 
-// --- Visitors Counter Cloud Sync ---
+// ==========================================
+// 4. عداد الزوار الحقيقي (Realtime Database /visitors)
+// ==========================================
 
 /**
- * Real-time listener for visitors count
+ * الاشتراك اللحظي في عداد زوار الموقع
  */
 export function subscribeVisitors(callback) {
   try {
-    const docRef = doc(db, SETTINGS_COL, "analytics");
-    return onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists() && typeof docSnap.data().visitors === "number") {
-        callback(docSnap.data().visitors);
+    const visitorsRef = ref(rtdb, "visitors");
+    return onValue(visitorsRef, (snapshot) => {
+      if (snapshot.exists() && typeof snapshot.val() === "number") {
+        callback(snapshot.val());
       }
-    }, (err) => {
-      console.warn("Firestore visitors subscription warning:", err.message);
+    }, (error) => {
+      console.warn("RTDB visitors warning:", error.message);
     });
   } catch (err) {
-    console.warn("Failed to subscribe to visitors:", err);
+    console.warn("Error subscribing to RTDB visitors:", err);
     return () => {};
   }
 }
 
 /**
- * Set or increment visitor count in Firestore
+ * تحديث أو تصفير عداد الزوار في Realtime Database
  */
 export async function updateVisitorsCloud(count) {
   try {
-    const docRef = doc(db, SETTINGS_COL, "analytics");
-    await setDoc(docRef, { visitors: count, updatedAt: new Date().toISOString() }, { merge: true });
+    const visitorsRef = ref(rtdb, "visitors");
+    await set(visitorsRef, count);
     return true;
   } catch (err) {
-    console.warn("Failed to update visitors in Firestore:", err);
+    console.warn("Failed to update visitors in Realtime Database:", err);
     return false;
+  }
+}
+
+/**
+ * زيادة عداد الزوار بمقدار 1 في Realtime Database
+ */
+export async function incrementVisitorCounter() {
+  try {
+    const visitorsRef = ref(rtdb, "visitors");
+    const snapshot = await get(visitorsRef);
+    let cur = 0;
+    if (snapshot.exists() && typeof snapshot.val() === "number") {
+      cur = snapshot.val();
+    }
+    const next = cur + 1;
+    await set(visitorsRef, next);
+    return next;
+  } catch (err) {
+    console.warn("Failed to increment visitor counter in RTDB:", err);
+    return null;
   }
 }

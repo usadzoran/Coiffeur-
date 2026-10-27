@@ -12,7 +12,8 @@ import {
   subscribeVisitors,
   saveAppointmentCloud,
   seedBarbersIfEmpty,
-  updateVisitorsCloud
+  updateVisitorsCloud,
+  incrementVisitorCounter
 } from "./firebase.js";
 
 // Initial Seed Data
@@ -145,53 +146,8 @@ const DEFAULT_ADS = {
   }
 };
 
-const DEFAULT_APPOINTMENTS = [
-  {
-    id: "GOLD-101",
-    barberId: "barber-karim",
-    barberName: "كريم بن عيسى",
-    serviceId: "srv-1",
-    serviceName: "قص شعر كلاسيكي أو عصري",
-    servicePrice: 500,
-    date: new Date().toISOString().split("T")[0],
-    time: "15:00",
-    clientName: "أحمد بن علي",
-    clientPhone: "0661223344",
-    notes: "قص خفيف مع تحديد دقيق",
-    status: "accepted",
-    createdAt: new Date(Date.now() - 3600000).toISOString()
-  },
-  {
-    id: "GOLD-102",
-    barberId: "barber-youssef",
-    barberName: "يوسف بلحاج",
-    serviceId: "srv-2",
-    serviceName: "تدريج فيد (Fade) احترافي",
-    servicePrice: 700,
-    date: new Date().toISOString().split("T")[0],
-    time: "16:30",
-    clientName: "رياض وهراني",
-    clientPhone: "0770556677",
-    notes: "ميد فيد مع تحديد اللحية",
-    status: "pending",
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: "GOLD-103",
-    barberId: "barber-sami",
-    barberName: "سامي بوعلام",
-    serviceId: "srv-4",
-    serviceName: "باقة VIP المتكاملة الفاخرة",
-    servicePrice: 1800,
-    date: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-    time: "18:00",
-    clientName: "بلال حراشي",
-    clientPhone: "0550114488",
-    notes: "تحضير لمناسبة عائلية",
-    status: "pending",
-    createdAt: new Date().toISOString()
-  }
-];
+// لا توجد بيانات وهمية - يتم جلب المواعيد الحقيقية حصرياً من Firebase Realtime Database
+const DEFAULT_APPOINTMENTS = [];
 
 // LocalStorage Safe Utilities
 function safeGet(key, defaultVal) {
@@ -218,25 +174,30 @@ function safeSet(key, val) {
 const State = {
   barbers: safeGet("barbershop_barbers", DEFAULT_BARBERS),
   services: safeGet("barbershop_services", DEFAULT_SERVICES),
-  appointments: safeGet("barbershop_appointments", DEFAULT_APPOINTMENTS),
+  appointments: safeGet("barbershop_appointments", []),
   ads: safeGet("barbershop_ads", DEFAULT_ADS),
   ownerPin: safeGet("barbershop_owner_pin", "admin2026"),
   currentBarberSession: safeGet("barbershop_active_barber", null),
   isOwnerLoggedIn: false,
-  visitors: safeGet("barbershop_visitors", 486),
+  visitors: safeGet("barbershop_visitors", 0),
   selectedBarberForBooking: "",
   selectedServiceForBooking: ""
 };
 
-// Track visitor count once per session
+// Track visitor count in Firebase Realtime Database
 (function recordVisit() {
   try {
     const visited = sessionStorage.getItem("barbershop_visited");
     if (!visited) {
-      State.visitors += 1;
-      safeSet("barbershop_visitors", State.visitors);
-      updateVisitorsCloud(State.visitors);
       sessionStorage.setItem("barbershop_visited", "true");
+      incrementVisitorCounter().then(newCount => {
+        if (typeof newCount === "number") {
+          State.visitors = newCount;
+          safeSet("barbershop_visitors", newCount);
+          const counterEl = $("#visitor-counter-val");
+          if (counterEl) counterEl.textContent = Number(newCount).toLocaleString("ar-DZ");
+        }
+      });
     }
   } catch (e) {}
 })();
