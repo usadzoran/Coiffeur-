@@ -1,0 +1,6 @@
+{
+  "name": "صالون المقص الذهبي - بن فريحة وهران",
+  "description": "منصة حلاقة عصرية متكاملة في بن فريحة بوهران تضم ٣ حلاقين محترفين لحجز المواعيد باليوم والوقت وإدارتها وقبولها فورياً.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
