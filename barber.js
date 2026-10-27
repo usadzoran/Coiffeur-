@@ -13,6 +13,7 @@ import {
   changeBarberPassword,
   saveBarberProfileCloud,
   uploadBarberPortfolioImage,
+  uploadBarberProfileImage,
   deleteBarberPortfolioImage
 } from "./firebase.js";
 
@@ -58,9 +59,21 @@ let appointmentsRealtimeReady = false;
 
 function loadBarberProfile() {
   barberProfile = {
+    displayName: activeBarber?.displayName || activeBarber?.name || "",
+    displayRole: activeBarber?.displayRole || activeBarber?.role || "",
+    profileImage: activeBarber?.profileImage || activeBarber?.image || "",
     portfolio: Array.isArray(activeBarber?.portfolio) ? activeBarber.portfolio : [],
     hairstyles: Array.isArray(activeBarber?.hairstyles) ? activeBarber.hairstyles : []
   };
+  const nameInput = document.getElementById("barber-display-name");
+  const roleInput = document.getElementById("barber-display-role");
+  const preview = document.getElementById("barber-profile-preview");
+  if (nameInput) nameInput.value = barberProfile.displayName;
+  if (roleInput) roleInput.value = barberProfile.displayRole;
+  if (preview && barberProfile.profileImage) {
+    preview.src = barberProfile.profileImage;
+    preview.style.display = "block";
+  }
   renderBarberProfile();
 }
 
@@ -384,6 +397,44 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("refresh-barber-appts")?.addEventListener("click", () => {
     renderBarberAppointments();
     showToast("تم تحديث المواعيد 🔄", "info");
+  });
+
+  document.getElementById("barber-profile-file")?.addEventListener("change", (event) => {
+    const file = event.target.files?.[0];
+    const preview = document.getElementById("barber-profile-preview");
+    if (file && preview) {
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+    }
+  });
+
+  document.getElementById("barber-public-profile-form")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!activeBarber) return;
+    const name = document.getElementById("barber-display-name").value.trim();
+    const role = document.getElementById("barber-display-role").value.trim();
+    const file = document.getElementById("barber-profile-file").files?.[0];
+    if (!name || !role) {
+      showToast("أدخل الاسم والتخصص اللذين سيظهران للزبائن", "warning");
+      return;
+    }
+    try {
+      barberProfile.displayName = name;
+      barberProfile.displayRole = role;
+      if (file) {
+        const image = await uploadBarberProfileImage(activeBarber.id, file);
+        barberProfile.profileImage = image.url;
+      }
+      await saveBarberProfileCloud(activeBarber.id, barberProfile);
+      activeBarber.displayName = name;
+      activeBarber.displayRole = role;
+      activeBarber.profileImage = barberProfile.profileImage;
+      const profilePreview = document.getElementById("barber-profile-preview");
+      if (profilePreview && barberProfile.profileImage) profilePreview.src = barberProfile.profileImage;
+      showToast("تم تحديث الملف العام وسيظهر للزبائن من Firebase", "success");
+    } catch (error) {
+      showToast(error.message || "تعذر حفظ الملف العام في Firebase", "error");
+    }
   });
 
   document.getElementById("barber-password-form")?.addEventListener("submit", async (event) => {

@@ -214,12 +214,15 @@ function renderBarbers() {
   if (!container) return;
 
   container.innerHTML = State.barbers.map(barber => {
+    const publicName = barber.displayName || barber.name;
+    const publicRole = barber.displayRole || barber.role;
+    const publicImage = barber.profileImage || barber.image;
     return `
       <div class="barber-card" data-id="${barber.id}">
         <div class="barber-img-wrap">
           <img 
-            src="${barber.image}" 
-            alt="${barber.name}"
+            src="${publicImage}"
+            alt="${publicName}"
             class="barber-img"
             loading="lazy"
             onerror="this.onerror=null; this.src='${barber.fallbackImage || 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80'}';"
@@ -236,8 +239,8 @@ function renderBarbers() {
         </div>
 
         <div class="barber-info">
-          <h3 class="barber-name">${barber.name}</h3>
-          <p class="barber-role">${barber.role}</p>
+          <h3 class="barber-name">${publicName}</h3>
+          <p class="barber-role">${publicRole}</p>
 
           <div class="barber-meta-pills">
             <span class="meta-pill">⏱️ ${barber.experience}</span>

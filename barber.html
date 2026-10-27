@@ -142,6 +142,22 @@
           <h3 style="font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 6px;">ملفي المهني</h3>
           <p style="font-size: .82rem; color: #9ca3af; margin: 0 0 18px;">حدّث كلمة مرورك، أضف صور أعمالك، واعرض خمس تسريحات بالأسعار التي تختارها.</p>
 
+          <form id="barber-public-profile-form" style="display:grid; gap:10px; margin-bottom:24px;">
+            <label style="font-size:.8rem; color:#d4d4d8;">الاسم الظاهر للزبائن
+              <input id="barber-display-name" class="form-control" type="text" required placeholder="مثال: أمين السعيدي" style="width:100%; margin-top:6px;">
+            </label>
+            <label style="font-size:.8rem; color:#d4d4d8;">التخصص أو الوصف الظاهر
+              <input id="barber-display-role" class="form-control" type="text" required placeholder="مثال: متخصص في قصات الفيد واللحية" style="width:100%; margin-top:6px;">
+            </label>
+            <label style="font-size:.8rem; color:#d4d4d8;">الصورة الرئيسية التي ستظهر للزبائن
+              <input id="barber-profile-file" type="file" accept="image/*" style="display:block; margin-top:8px; color:#d4d4d8;">
+            </label>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <img id="barber-profile-preview" src="" alt="معاينة الصورة" style="width:70px; height:70px; border-radius:12px; object-fit:cover; border:2px solid #f59e0b; display:none;">
+              <button type="submit" class="btn-primary" style="padding:9px 18px; border-radius:8px;">حفظ الملف العام</button>
+            </div>
+          </form>
+
           <form id="barber-password-form" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; margin-bottom: 24px;">
             <label style="font-size: .8rem; color: #d4d4d8;">كلمة المرور الجديدة
               <input id="barber-new-password" type="password" minlength="8" required placeholder="8 أحرف على الأقل" class="form-control" style="width:100%; margin-top:6px;">

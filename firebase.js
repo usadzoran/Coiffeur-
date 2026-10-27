@@ -141,6 +141,9 @@ export async function saveBarberProfileCloud(barberId, profile) {
     throw new Error("جلسة الحلاق غير صالحة.");
   }
   await update(ref(rtdb, `barbers/${barberId}`), {
+    displayName: profile.displayName || "",
+    displayRole: profile.displayRole || "",
+    profileImage: profile.profileImage || "",
     portfolio: profile.portfolio || [],
     hairstyles: profile.hairstyles || [],
     updatedAt: new Date().toISOString()
@@ -155,6 +158,18 @@ export async function uploadBarberPortfolioImage(barberId, file) {
   if (file.size > 5 * 1024 * 1024) throw new Error("حجم الصورة يجب ألا يتجاوز 5 ميغابايت.");
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
   const path = `barbers/${barberId}/portfolio/${Date.now()}-${safeName}`;
+  const uploaded = await uploadBytes(storageRef(storage, path), file, { contentType: file.type });
+  return { path, url: await getDownloadURL(uploaded.ref), name: file.name };
+}
+
+export async function uploadBarberProfileImage(barberId, file) {
+  if (!auth.currentUser || auth.currentUser.isAnonymous) {
+    throw new Error("جلسة الحلاق غير صالحة.");
+  }
+  if (!file || !file.type.startsWith("image/")) throw new Error("اختر ملف صورة صالحاً.");
+  if (file.size > 5 * 1024 * 1024) throw new Error("حجم الصورة يجب ألا يتجاوز 5 ميغابايت.");
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+  const path = `barbers/${barberId}/profile/${Date.now()}-${safeName}`;
   const uploaded = await uploadBytes(storageRef(storage, path), file, { contentType: file.type });
   return { path, url: await getDownloadURL(uploaded.ref), name: file.name };
 }
