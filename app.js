@@ -83,7 +83,7 @@ const DEFAULT_ADS = {
         <span style="background: #fff; color: #b45309; padding: 2px 8px; border-radius: 6px; font-size: 0.8rem;">عرض خاص</span>
         <span>🎉 خصم 20% على باقة VIP الكاملة طيلة هذا الأسبوع لزبائن بن فريحة بوهران!</span>
       </div>
-      <a href="#services" style="background: #111; color: #fef08a; padding: 6px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; text-decoration: none; white-space: nowrap;">استفد الآن</a>
+      <a href="#barbers" style="background: #111; color: #fef08a; padding: 6px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; text-decoration: none; white-space: nowrap;">احجز الآن</a>
     </div>`
   },
   middle: {
@@ -388,17 +388,21 @@ function renderAds() {
 function updateBookingSelects() {
   const barberSelect = $("#booking-barber-select");
   if (barberSelect) {
+    const currentBarberId = barberSelect.value;
     barberSelect.innerHTML = `
-      <option value="">أي حلاق متاح (الأسرع دوراً)</option>
-      ${State.barbers.map(b => `<option value="${b.id}">${b.name} (${b.role})</option>`).join("")}
+      <option value="">اختر الحلاق أولاً...</option>
+      ${State.barbers.map(b => `<option value="${b.id}">${b.displayName || b.name}</option>`).join("")}
     `;
+    barberSelect.value = currentBarberId;
   }
 
   const srvSelect = $("#booking-service-select");
   if (srvSelect) {
+    const selectedBarber = State.barbers.find((barber) => barber.id === barberSelect?.value);
+    const hairstyles = Array.isArray(selectedBarber?.hairstyles) ? selectedBarber.hairstyles : [];
     srvSelect.innerHTML = `
-      <option value="">اختر الخدمة المطلوبة...</option>
-      ${State.services.map(s => `<option value="${s.id}">${s.name} - ${s.price} د.ج (${s.duration} د)</option>`).join("")}
+      <option value="">${selectedBarber ? "اختر التسريحة المطلوبة..." : "اختر الحلاق أولاً..."}</option>
+      ${hairstyles.map((style, index) => `<option value="style-${index}">${style.name} - ${style.price} د.ج</option>`).join("")}
     `;
   }
 }
@@ -410,6 +414,7 @@ function openBookingModal(preselectedBarberId = null, preselectedServiceId = nul
   const barberSelect = $("#booking-barber-select");
   if (barberSelect && preselectedBarberId) {
     barberSelect.value = preselectedBarberId;
+    updateBookingSelects();
   }
 
   const srvSelect = $("#booking-service-select");
@@ -468,15 +473,22 @@ async function handleBookingSubmit(e) {
   }
 
   // Find Barber and Service objects
-  let assignedBarber = State.barbers.find(b => b.id === barberId);
+  const assignedBarber = State.barbers.find(b => b.id === barberId);
   if (!assignedBarber) {
-    // If "Any", pick first available
-    assignedBarber = State.barbers[0];
+    showToast("يرجى اختيار الحلاق أولاً", "warning");
+    return;
   }
-
-  const service = State.services.find(s => s.id === serviceId) || {
-    name: "حلاقة مخصصة",
-    price: 500
+  const styleIndex = Number(String(serviceId).replace("style-", ""));
+  const selectedStyle = Array.isArray(assignedBarber.hairstyles) ? assignedBarber.hairstyles[styleIndex] : null;
+  if (!selectedStyle) {
+    showToast("هذا الحلاق لم يضف تسريحاته وأسعارها بعد", "warning");
+    return;
+  }
+  const service = {
+    id: serviceId,
+    name: selectedStyle.name,
+    price: Number(selectedStyle.price || 0),
+    duration: selectedStyle.duration || 30
   };
 
   const bookingCode = "GOLD-" + Math.floor(1000 + Math.random() * 9000);
@@ -863,6 +875,9 @@ async function initApp() {
   if (bookingForm) {
     bookingForm.addEventListener("submit", handleBookingSubmit);
   }
+  $("#booking-barber-select")?.addEventListener("change", () => {
+    updateBookingSelects();
+  });
 
   // Lookup Form Submit
   const lookupForm = $("#lookup-form");
