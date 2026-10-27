@@ -698,7 +698,11 @@ function setupEventListeners() {
         workingHours: "09:00 ص - 21:00 م"
       };
       barbers.push(newBarber);
-      await saveBarberCloud(newBarber);
+      const savedInFirebase = await saveBarberCloud(newBarber);
+      if (!savedInFirebase) {
+        showToast("تعذر حفظ الحلاق في Firebase. لم يتم إكمال الإضافة.", "error");
+        return;
+      }
       const waPhone = newBarber.phone.replace(/\D/g, "").replace(/^0/, "213");
       const message = encodeURIComponent(`مرحباً ${newBarber.name}، تم إنشاء حسابك في صالون المقص الذهبي.\nرابط الدخول: ${window.location.origin}${window.location.pathname.replace(/private-owner-console-7x4m\.html$/, "barber.html")}\nاسم المستخدم: ${username}\nكلمة المرور: ${password}`);
       window.open(`https://wa.me/${waPhone}?text=${message}`, "_blank", "noopener");
