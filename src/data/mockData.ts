@@ -1,6 +1,10 @@
 import { Barber, Service, Appointment } from '../types/barber';
+import heroImg from '../assets/images/hero_barbershop_1792939476848.jpg';
+import karimImg from '../assets/images/barber_karim_1792939478110.jpg';
+import youssefImg from '../assets/images/barber_youssef_1792939479092.jpg';
+import samiImg from '../assets/images/barber_sami_1792939479036.jpg';
 
-export const HERO_IMAGE = '/src/assets/images/hero_barbershop_1792939476848.jpg';
+export const HERO_IMAGE = heroImg;
 
 export const INITIAL_BARBERS: Barber[] = [
   {
@@ -11,7 +15,7 @@ export const INITIAL_BARBERS: Barber[] = [
     experienceYears: 8,
     rating: 4.9,
     reviewsCount: 184,
-    image: '/src/assets/images/barber_karim_1792939478110.jpg',
+    image: karimImg,
     chairNumber: 1,
     workingHours: {
       start: '10:00',
@@ -28,7 +32,7 @@ export const INITIAL_BARBERS: Barber[] = [
     experienceYears: 6,
     rating: 4.8,
     reviewsCount: 142,
-    image: '/src/assets/images/barber_youssef_1792939479092.jpg',
+    image: youssefImg,
     chairNumber: 2,
     workingHours: {
       start: '11:00',
@@ -45,7 +49,7 @@ export const INITIAL_BARBERS: Barber[] = [
     experienceYears: 5,
     rating: 4.9,
     reviewsCount: 119,
-    image: '/src/assets/images/barber_sami_1792939479036.jpg',
+    image: samiImg,
     chairNumber: 3,
     workingHours: {
       start: '12:00',

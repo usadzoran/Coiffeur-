@@ -68,7 +68,7 @@ export const OwnerPortal: React.FC<OwnerPortalProps> = ({
   const [startTime, setStartTime] = useState<string>('10:00');
   const [endTime, setEndTime] = useState<string>('22:00');
   const [specialtiesText, setSpecialtiesText] = useState<string>('قصات حديثة, تحديد لحية, سشوار');
-  const [imageUrl, setImageUrl] = useState<string>('/src/assets/images/barber_karim_1792939478110.jpg');
+  const [imageUrl, setImageUrl] = useState<string>(barbers[0]?.image || '');
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
 
