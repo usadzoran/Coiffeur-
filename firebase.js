@@ -8,6 +8,7 @@
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
+  signInAnonymously,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -113,6 +114,13 @@ export function subscribeAuth(callback) {
 
 export function signOutFirebase() {
   return signOut(auth);
+}
+
+export async function ensureFirebaseSession() {
+  await persistenceReady;
+  if (auth.currentUser) return auth.currentUser;
+  const credential = await signInAnonymously(auth);
+  return credential.user;
 }
 
 // Initialize Analytics conditionally (only supported in browser environments)
@@ -309,9 +317,7 @@ export function subscribeAds(callback) {
   try {
     const adsRef = ref(rtdb, "ads");
     return onValue(adsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        callback(snapshot.val());
-      }
+        callback(snapshot.exists() ? snapshot.val() : null);
     }, (error) => {
       console.warn("RTDB ads warning:", error.message);
     });
@@ -347,9 +353,7 @@ export function subscribeVisitors(callback) {
   try {
     const visitorsRef = ref(rtdb, "visitors");
     return onValue(visitorsRef, (snapshot) => {
-      if (snapshot.exists() && typeof snapshot.val() === "number") {
-        callback(snapshot.val());
-      }
+        callback(snapshot.exists() && typeof snapshot.val() === "number" ? snapshot.val() : 0);
     }, (error) => {
       console.warn("RTDB visitors warning:", error.message);
     });

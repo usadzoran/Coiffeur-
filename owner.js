@@ -84,6 +84,7 @@ let appointments = safeGet("barbershop_appointments", []);
 let ads = safeGet("barbershop_ads", DEFAULT_ADS);
 let visitors = safeGet("barbershop_visitors", 0);
 let appointmentsSubscriptionReady = false;
+let eventListenersInitialized = false;
 
 // Toast Notification
 function showToast(message, type = "info") {
@@ -549,6 +550,9 @@ window.deleteAppointment = async function(apptId) {
 
 // Setup Event Listeners
 function setupEventListeners() {
+  if (eventListenersInitialized) return;
+  eventListenersInitialized = true;
+
   // Tabs Switcher
   document.querySelectorAll(".owner-tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -746,6 +750,8 @@ function setupEventListeners() {
 
 // Initial Boot
 document.addEventListener("DOMContentLoaded", () => {
+  // مستمعو الدخول والاستعادة يجب أن يعملوا قبل دخول المالك، لا داخل لوحة التحكم فقط.
+  setupEventListeners();
   subscribeAuth((user) => {
     window.firebaseOwnerUser = user && user.email?.toLowerCase() === OWNER_EMAIL.toLowerCase() ? user : null;
     updateAuthView();

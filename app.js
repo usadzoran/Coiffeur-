@@ -13,7 +13,8 @@ import {
   saveAppointmentCloud,
   updateVisitorsCloud,
   incrementVisitorCounter,
-  signInBarber
+  signInBarber,
+  ensureFirebaseSession
 } from "./firebase.js";
 
 // Initial Seed Data
@@ -396,7 +397,7 @@ function openBookingModal(preselectedBarberId = null, preselectedServiceId = nul
 }
 
 // BOOKING SUBMISSION
-function handleBookingSubmit(e) {
+async function handleBookingSubmit(e) {
   e.preventDefault();
 
   const barberId = $("#booking-barber-select").value;
@@ -461,8 +462,14 @@ function handleBookingSubmit(e) {
   State.appointments.unshift(newAppointment);
   safeSet("barbershop_appointments", State.appointments);
 
-  // Sync to Firebase Cloud Firestore (ykin-1241b)
-  saveAppointmentCloud(newAppointment);
+  // لا نعرض نجاحاً للزبون قبل تأكيد الحفظ في Firebase.
+  const savedInFirebase = await saveAppointmentCloud(newAppointment);
+  if (!savedInFirebase) {
+    State.appointments = State.appointments.filter((item) => item.id !== bookingCode);
+    safeSet("barbershop_appointments", State.appointments);
+    showToast("تعذر حفظ الحجز في قاعدة البيانات. تحقق من الاتصال وحاول مرة أخرى.", "error");
+    return;
+  }
 
   // Render Confirmation details
   $("#success-booking-id").textContent = bookingCode;
@@ -765,15 +772,21 @@ function renderBarberAppointments(filter = "all") {
 }
 
 // INIT APPLICATION
-function initApp() {
+async function initApp() {
+  try {
+    await ensureFirebaseSession();
+  } catch (error) {
+    console.error("Firebase session initialization failed:", error);
+    showToast("تعذر الاتصال بقاعدة البيانات. فعّل Anonymous sign-in في Firebase ثم أعد تحميل الموقع.", "error");
+    return;
+  }
+
   // Real-time Cloud Firestore Subscriptions (ykin-1241b)
   subscribeBarbers((cloudBarbers) => {
-    if (cloudBarbers && cloudBarbers.length > 0) {
-      State.barbers = cloudBarbers;
-      safeSet("barbershop_barbers", cloudBarbers);
-      renderBarbers();
-      updateBookingSelects();
-    }
+    State.barbers = cloudBarbers || [];
+    safeSet("barbershop_barbers", State.barbers);
+    renderBarbers();
+    updateBookingSelects();
   });
 
   subscribeAds((cloudAds) => {
@@ -794,13 +807,11 @@ function initApp() {
   });
 
   subscribeAppointments((cloudAppts) => {
-    if (cloudAppts && cloudAppts.length > 0) {
-      State.appointments = cloudAppts;
-      safeSet("barbershop_appointments", cloudAppts);
-      const lookupInput = $("#lookup-phone-input");
-      if (lookupInput && lookupInput.value.trim()) {
-        handleAppointmentsLookup(lookupInput.value.trim());
-      }
+    State.appointments = cloudAppts || [];
+    safeSet("barbershop_appointments", State.appointments);
+    const lookupInput = $("#lookup-phone-input");
+    if (lookupInput && lookupInput.value.trim()) {
+      handleAppointmentsLookup(lookupInput.value.trim());
     }
   });
 
