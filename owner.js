@@ -490,7 +490,10 @@ function setupEventListeners() {
       e.preventDefault();
       const password = document.getElementById("owner-pin-input").value;
       try {
-        await signInOwner(password);
+        const credential = await signInOwner(password);
+        // لا نعتمد على تأخر onAuthStateChanged وحده بعد تسجيل الدخول.
+        window.firebaseOwnerUser = credential.user;
+        updateAuthView();
         showToast("تم تسجيل الدخول عبر Firebase بنجاح", "success");
       } catch (error) {
         const code = error?.code || "";
