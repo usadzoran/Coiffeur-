@@ -637,7 +637,7 @@ function setupEventListeners() {
           workingHours: "09:00 ص - 21:00 م"
         };
         const savedInFirebase = await saveBarberCloud(newBarber);
-        if (!savedInFirebase) throw new Error("تعذر حفظ سجل الحلاق في Firebase. تحقق من قواعد Realtime Database.");
+        if (!savedInFirebase) throw new Error("تعذر حفظ سجل الحلاق في Firebase.");
         barbers = [...barbers.filter((item) => item.id !== newBarber.id), newBarber];
         safeSet("barbershop_barbers", barbers);
         const waPhone = newBarber.phone.replace(/\D/g, "").replace(/^0/, "213");
@@ -655,6 +655,8 @@ function setupEventListeners() {
             ? "تسجيل الدخول بالبريد وكلمة المرور غير مفعّل في Firebase Authentication."
             : code === "auth/invalid-api-key"
               ? "مفتاح Firebase غير صالح. تحقق من إعدادات المشروع."
+              : code === "PERMISSION_DENIED"
+                ? "Firebase رفض حفظ الحلاق: قواعد Realtime Database لا تسمح لحساب المالك بالكتابة إلى /barbers."
               : error?.message || "تعذر إنشاء حساب الحلاق أو حفظه في Firebase.";
         console.error("Barber creation failed:", error);
         showToast(message, "error");

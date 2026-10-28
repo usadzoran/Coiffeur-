@@ -337,6 +337,10 @@ export async function seedBarbersIfEmpty(defaultBarbers) {
  */
 export async function saveBarberCloud(barber) {
   try {
+    await persistenceReady;
+    if (!auth.currentUser || auth.currentUser.isAnonymous) {
+      throw new Error("جلسة المالك غير صالحة أو انتهت. أعد تسجيل الدخول ثم حاول مرة أخرى.");
+    }
     const barberRef = ref(rtdb, `barbers/${barber.id}`);
     await set(barberRef, {
       ...barber,
@@ -346,7 +350,11 @@ export async function saveBarberCloud(barber) {
     return true;
   } catch (err) {
     console.warn("Failed to save barber to Realtime Database:", err);
-    return false;
+    const error = new Error(err?.code === "PERMISSION_DENIED"
+      ? "Firebase رفض الكتابة إلى /barbers. قواعد Realtime Database لا تسمح لحساب المالك بإضافة حلاق."
+      : err?.message || "تعذر حفظ الحلاق في Realtime Database.");
+    error.code = err?.code || "rtdb/save-failed";
+    throw error;
   }
 }
 
