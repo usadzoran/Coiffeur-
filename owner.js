@@ -1,7 +1,7 @@
 /**
  * صالون المقص الذهبي - بن فريحة، وهران
  * Golden Scissors - Dedicated Owner Portal (owner.js)
- * متصل مباشرة مع Firebase Cloud Firestore (ykin-1241b)
+ * متصل مباشرة مع Supabase PostgreSQL وStorage
  */
 
 import {
@@ -15,17 +15,14 @@ import {
   saveAdsCloud,
   subscribeVisitors,
   updateVisitorsCloud,
-  seedBarbersIfEmpty,
-  SQL_SETUP_SCRIPT
-} from "./database.js";
-
-window.copySupabaseSql = function() {
-  navigator.clipboard.writeText(SQL_SETUP_SCRIPT).then(() => {
-    showToast("تم نسخ كود SQL لإنشاء جداول Supabase بنجاح! 📋 يمكنك لصقه في Supabase SQL Editor.", "success");
-  }).catch(() => {
-    prompt("انسخ كود SQL:", SQL_SETUP_SCRIPT);
-  });
-};
+  createBarberAccount,
+  signInOwner,
+  registerOwner,
+  resetOwnerPassword,
+  signOutSupabase,
+  subscribeAuth,
+  OWNER_EMAIL
+} from "./supabase.js";
 
 // Storage Helpers
 function safeGet(key, defaultVal) {
@@ -48,45 +45,8 @@ function safeSet(key, val) {
   }
 }
 
-// Default Seed Data
-const DEFAULT_BARBERS = [
-  {
-    id: "barber-karim",
-    name: "كريم بن عيسى",
-    role: "خبير القصات الكلاسيكية وتصفيف اللحية الملكية",
-    experience: "10 سنوات خبرة",
-    phone: "0555 11 22 33",
-    username: "karim",
-    password: "karim123",
-    image: "./public/images/barber_karim_1792939478110.jpg",
-    available: true,
-    workingHours: "09:00 ص - 21:00 م"
-  },
-  {
-    id: "barber-youssef",
-    name: "يوسف بلحاج",
-    role: "متخصص تدريج الشعر الفيد (Fade) ونحت اللحية",
-    experience: "7 سنوات خبرة",
-    phone: "0555 22 33 44",
-    username: "youssef",
-    password: "youssef123",
-    image: "./public/images/barber_youssef_1792939479092.jpg",
-    available: true,
-    workingHours: "10:00 ص - 22:00 م"
-  },
-  {
-    id: "barber-sami",
-    name: "سامي بوعلام",
-    role: "مصفف كبار الشخصيات VIP ومساج وعلاجات البروتين",
-    experience: "8 سنوات خبرة",
-    phone: "0555 33 44 55",
-    username: "sami",
-    password: "sami123",
-    image: "./public/images/barber_sami_1792939479036.jpg",
-    available: true,
-    workingHours: "09:00 ص - 20:00 م"
-  }
-];
+// لا توجد حسابات أو كلمات مرور مزروعة مسبقاً. ينشئ المالك كل حساب من اللوحة.
+const DEFAULT_BARBERS = [];
 
 const DEFAULT_ADS = {
   header: {
@@ -104,7 +64,7 @@ const DEFAULT_ADS = {
     html: `<div style="background: #17171d; border: 1px dashed #d97706; padding: 16px; border-radius: 14px; text-align: center;">
   <p style="color: #f59e0b; font-weight: 700; margin-bottom: 4px;">مساحة إعلانية مخصصة (وسط الموقع)</p>
   <p style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 8px;">يمكن لصاحب الصالون لصق أي كود إعلاني HTML (بنرات أو Google Ads) من لوحة الإدارة.</p>
-  <span style="display: inline-block; background: #27272a; color: #e4e4e7; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem;">رقم هاتف الصالون للاستفسار: 0555 12 34 56</span>
+  <span style="display: inline-block; background: #27272a; color: #e4e4e7; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem;">رقم هاتف الصالون للاستفسار: 0777 11 76 63</span>
 </div>`
   },
   footer: {
@@ -119,10 +79,12 @@ const DEFAULT_ADS = {
 };
 
 // State
-let barbers = safeGet("barbershop_barbers", DEFAULT_BARBERS);
+let barbers = [];
 let appointments = safeGet("barbershop_appointments", []);
 let ads = safeGet("barbershop_ads", DEFAULT_ADS);
 let visitors = safeGet("barbershop_visitors", 0);
+let appointmentsSubscriptionReady = false;
+let eventListenersInitialized = false;
 
 // Toast Notification
 function showToast(message, type = "info") {
@@ -153,16 +115,15 @@ window.closeModal = function(selector) {
   if (modal) modal.classList.remove("modal-open");
 };
 
-// Check if authenticated
+// تحقق حقيقي من جلسة Supabase Authentication
 function isOwnerAuthenticated() {
-  return sessionStorage.getItem("barbershop_owner_auth") === "true";
+  return !!window.supabaseOwnerUser && window.supabaseOwnerUser.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
 }
 
 function updateAuthView() {
   const loginView = document.getElementById("owner-login-view");
   const dashboardView = document.getElementById("owner-dashboard-view");
   const logoutBtn = document.getElementById("owner-logout-btn");
-
   if (isOwnerAuthenticated()) {
     if (loginView) loginView.style.display = "none";
     if (dashboardView) dashboardView.style.display = "block";
@@ -177,33 +138,34 @@ function updateAuthView() {
 
 // Initialize Dashboard
 function initDashboard() {
-  setupUrls();
   updateMetrics();
   renderBarbersCredentials();
   initAdsManager();
   renderAppointmentsTable();
   setupEventListeners();
 
-  // Seed default barbers in Firestore if empty
-  seedBarbersIfEmpty(DEFAULT_BARBERS);
-
   // Real-time Cloud Subscriptions
   subscribeAppointments((cloudAppts) => {
-    if (cloudAppts && cloudAppts.length > 0) {
-      appointments = cloudAppts;
-      safeSet("barbershop_appointments", cloudAppts);
-      renderAppointmentsTable();
-      updateMetrics();
+    const nextAppointments = cloudAppts || [];
+    if (appointmentsSubscriptionReady) {
+      const previousIds = new Set(appointments.map((item) => item.id));
+      const newPending = nextAppointments.find((item) => !previousIds.has(item.id) && item.status === "pending");
+      if (newPending) {
+        showToast(`حجز جديد من ${newPending.clientName} لدى ${newPending.barberName}. افتح زر واتساب لإشعار الحلاق.`, "success");
+      }
     }
+    appointments = nextAppointments;
+    appointmentsSubscriptionReady = true;
+    safeSet("barbershop_appointments", appointments);
+    renderAppointmentsTable();
+    updateMetrics();
   });
 
   subscribeBarbers((cloudBarbers) => {
-    if (cloudBarbers && cloudBarbers.length > 0) {
-      barbers = cloudBarbers;
-      safeSet("barbershop_barbers", cloudBarbers);
-      renderBarbersCredentials();
-      updateMetrics();
-    }
+    barbers = cloudBarbers || [];
+    safeSet("barbershop_barbers", barbers);
+    renderBarbersCredentials();
+    updateMetrics();
   });
 
   subscribeAds((cloudAds) => {
@@ -223,64 +185,9 @@ function initDashboard() {
   });
 }
 
-// Setup Clean Absolute URLs
-function setupUrls() {
-  const currentOrigin = window.location.origin;
-  const currentPath = window.location.pathname;
-  const dirPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-
-  const ownerUrl = `${currentOrigin}${dirPath}owner.html`;
-  const barberUrl = `${currentOrigin}${dirPath}barber.html`;
-  const clientUrl = `${currentOrigin}${dirPath}index.html`;
-
-  const ownerEl = document.getElementById("owner-page-url");
-  const barberEl = document.getElementById("barber-portal-url");
-  const clientEl = document.getElementById("client-site-url");
-
-  if (ownerEl) ownerEl.textContent = ownerUrl;
-  if (barberEl) barberEl.textContent = barberUrl;
-  if (clientEl) clientEl.textContent = clientUrl;
-}
-
-// Copy URL handler
-window.copySpecificUrl = function(elementId) {
-  const el = document.getElementById(elementId);
-  if (!el) return;
-  const text = el.textContent;
-  if (!text) return;
-  navigator.clipboard.writeText(text).then(() => {
-    showToast("تم نسخ الرابط بنجاح إلى الحافظة! 📋", "success");
-  }).catch(() => {
-    prompt("انسخ الرابط يدوياً:", text);
-  });
-};
-
-// Copy All Links
-document.getElementById("copy-all-links-btn")?.addEventListener("click", () => {
-  const ownerUrl = document.getElementById("owner-page-url")?.textContent || "";
-  const barberUrl = document.getElementById("barber-portal-url")?.textContent || "";
-  const clientUrl = document.getElementById("client-site-url")?.textContent || "";
-
-  const fullText = `💈 روابط صالون المقص الذهبي - بن فريحة بوهران:
-1️⃣ رابط موقع الزبائن لحجز المواعيد:
-${clientUrl}
-
-2️⃣ رابط بوابة الحلاقين لتسجيل الدخول وقبول المواعيد:
-${barberUrl}
-
-3️⃣ رابط لوحة صاحب الصالون الإدارية المستقلة:
-${ownerUrl}`;
-
-  navigator.clipboard.writeText(fullText).then(() => {
-    showToast("تم نسخ جميع الروابط بنجاح! 📋", "success");
-  }).catch(() => {
-    prompt("انسخ الروابط:", fullText);
-  });
-});
-
 // Update Metrics Bar
 function updateMetrics() {
-  barbers = safeGet("barbershop_barbers", DEFAULT_BARBERS);
+  barbers = safeGet("barbershop_barbers", []);
   appointments = safeGet("barbershop_appointments", []);
   visitors = safeGet("barbershop_visitors", 0);
 
@@ -312,9 +219,8 @@ function renderBarbersCredentials() {
   const container = document.getElementById("barbers-credentials-list");
   if (!container) return;
 
-  barbers = safeGet("barbershop_barbers", DEFAULT_BARBERS);
-  const barberPortalUrl = document.getElementById("barber-portal-url")?.textContent || window.location.href.replace("owner.html", "barber.html");
-
+  // القائمة تعكس الحلاقين المحفوظين فعلياً في Supabase، بلا حسابات تجريبية.
+  barbers = safeGet("barbershop_barbers", []);
   if (!barbers || barbers.length === 0) {
     container.innerHTML = `<div class="empty-state">لا يوجد حلاقين مسجلين حالياً. اضغط على "إضافة حلاق جديد" بالأعلى.</div>`;
     return;
@@ -322,43 +228,18 @@ function renderBarbersCredentials() {
 
   container.innerHTML = barbers.map(barber => {
     return `
-      <div class="barber-item-card">
-        <div style="display: flex; gap: 14px; align-items: flex-start;">
-          <img src="${barber.image || './public/images/barber_karim_1792939478110.jpg'}" alt="${barber.name}" class="barber-avatar" onerror="this.src='./public/images/barber_karim_1792939478110.jpg'">
-          <div style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
-              <div>
-                <h4 style="font-size: 1.1rem; font-weight: 800; color: #fff; margin: 0;">${barber.name}</h4>
-                <div style="font-size: 0.8rem; color: #fbbf24; margin: 2px 0 6px;">${barber.role}</div>
-                <div style="font-size: 0.75rem; color: #9ca3af;">📞 ${barber.phone} • ${barber.experience || 'حلاق محترف'}</div>
-              </div>
-              <div style="display: flex; gap: 6px;">
-                <button type="button" class="action-pill-btn" style="color: #4ade80; border-color: rgba(74,222,128,0.3);" onclick="copyBarberCredentials('${barber.id}')">
-                  📲 إرسال البيانات له
-                </button>
-                <button type="button" class="action-pill-btn" style="color: #f87171; border-color: rgba(239,68,68,0.3);" onclick="deleteBarber('${barber.id}')">
-                  حذف 🗑️
-                </button>
-              </div>
-            </div>
-
-            <!-- Credentials Box -->
-            <div class="credentials-badge">
-              <div style="font-size: 0.75rem; color: #9ca3af; margin-bottom: 6px; font-weight: 700;">
-                🔑 بيانات تسجيل الدخول الخاصة بالحلاق (Cloud Sync):
-              </div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
-                <div class="cred-row">
-                  <span class="cred-label">اسم المستخدم (Username):</span>
-                  <span class="cred-val">${barber.username}</span>
-                </div>
-                <div class="cred-row">
-                  <span class="cred-label">كلمة السر (Password):</span>
-                  <span class="cred-val">${barber.password}</span>
-                </div>
-              </div>
+      <div class="barber-item-card" style="padding:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div>
+            <h4 style="font-size:1.1rem; font-weight:800; color:#fff; margin:0 0 8px;">${barber.name}</h4>
+            <div style="display:grid; gap:5px; font-size:.82rem; color:#d4d4d8;">
+              <div>👤 اسم الدخول: <strong style="color:#fbbf24;">${barber.username || 'غير متوفر'}</strong></div>
+              <div>📧 بريد الحساب: <strong style="color:#bae6fd;">${barber.authEmail || barber.email || 'حساب Supabase'}</strong></div>
+              <div>📱 واتساب: <strong style="color:#4ade80;">${barber.phone || 'غير مضاف'}</strong></div>
+              <div style="font-size:.74rem; color:#9ca3af;">🔒 كلمة المرور لا تُخزّن في اللوحة؛ تُسلّم للحلاق عند إنشاء الحساب.</div>
             </div>
           </div>
+          <button type="button" class="action-pill-btn" style="color:#f87171; border-color:rgba(239,68,68,0.3);" onclick="deleteBarber('${barber.id}')">حذف 🗑️</button>
         </div>
       </div>
     `;
@@ -376,28 +257,10 @@ function renderBarbersCredentials() {
 
 // Copy Barber Credentials formatted as WhatsApp invitation
 window.copyBarberCredentials = function(barberId) {
-  barbers = safeGet("barbershop_barbers", DEFAULT_BARBERS);
-  const barber = barbers.find(b => b.id === barberId);
+  const barber = barbers.find((item) => item.id === barberId);
   if (!barber) return;
-
-  const barberPortalUrl = document.getElementById("barber-portal-url")?.textContent || window.location.href.replace("owner.html", "barber.html");
-
-  const message = `مرحباً يا ${barber.name} 💈
-تم تجهيز حسابك في منظومة "صالون المقص الذهبي - بن فريحة بوهران":
-
-🌐 رابط بوابة دخولك الخاصة:
-${barberPortalUrl}
-
-👤 اسم المستخدم: ${barber.username}
-🔑 كلمة المرور: ${barber.password}
-
-يرجى الدخول لمتابعة مواعيد زبائنك وقبول الحجوزات باليوم والوقت فوراً. بالتوفيق!`;
-
-  navigator.clipboard.writeText(message).then(() => {
-    showToast(`تم نسخ بيانات ${barber.name} بنجاح! يمكنك إرسالها له الآن على واتساب 📲`, "success");
-  }).catch(() => {
-    prompt("انسخ الرسالة:", message);
-  });
+  const message = `بيانات دخول الحلاق ${barber.name}\nاسم المستخدم: ${barber.username}\nواتساب: ${barber.phone}\nتم إرسال كلمة المرور الخاصة بك عند إنشاء الحساب.`;
+  navigator.clipboard.writeText(message).then(() => showToast(`تم نسخ رابط دخول ${barber.name}`, "success"));
 };
 
 // Delete Barber
@@ -410,7 +273,7 @@ window.deleteBarber = async function(barberId) {
     barbers = barbers.filter(b => b.id !== barberId);
     safeSet("barbershop_barbers", barbers);
     await deleteBarberCloud(barberId);
-    showToast(`تم حذف الحلاق ${barber.name} من النظام وسحابة Firebase`, "info");
+    showToast(`تم حذف الحلاق ${barber.name} من النظام وسحابة Supabase`, "info");
     renderBarbersCredentials();
     updateMetrics();
   }
@@ -482,7 +345,7 @@ window.insertAdTemplate = function(slot, type) {
   <span style="background: rgba(245,158,11,0.15); color: #fbbf24; font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 6px; display: inline-block; margin-bottom: 6px;">شريك الصالون الرسمي</span>
   <h4 style="color: #fff; font-size: 1.05rem; margin: 4px 0;">منتجات تصفيف الشعر الإيطالية الأصلية</h4>
   <p style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 10px;">متوفرة الآن حصرياً لدى صالون المقص الذهبي في بن فريحة بوهران.</p>
-  <a href="tel:0555123456" style="background: #232838; color: #e4e4e7; padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 700; display: inline-block;">لطلب المنتجات: 0555 12 34 56 📞</a>
+  <a href="tel:0777117663" style="background: #232838; color: #e4e4e7; padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 700; display: inline-block;">لطلب المنتجات: 0777 11 76 63 📞</a>
 </div>`;
   } else if (type === "location") {
     template = `<div style="background: linear-gradient(135deg, #18181b 0%, #27272a 100%); border: 1px solid #3f3f46; padding: 14px 20px; border-radius: 12px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;">
@@ -553,6 +416,7 @@ function renderAppointmentsTable() {
             ${item.status !== "rejected" ? `
               <button type="button" class="action-pill-btn" style="color:#f87171; border-color:rgba(248,113,113,0.3); padding:3px 8px; font-size:0.75rem;" onclick="updateAppointmentStatus('${item.id}', 'rejected')">إلغاء</button>
             ` : ''}
+            <button type="button" class="action-pill-btn" style="color:#25d366; border-color:rgba(37,211,102,0.35); padding:3px 8px; font-size:0.75rem;" onclick="notifyBarberWhatsApp('${item.id}')" title="فتح رسالة واتساب جاهزة للحلاق">واتساب</button>
             <button type="button" class="action-pill-btn" style="color:#ef4444; border-color:rgba(239,68,68,0.3); padding:3px 8px; font-size:0.75rem;" onclick="deleteAppointment('${item.id}')" title="حذف نهائياً">🗑️</button>
           </div>
         </td>
@@ -560,6 +424,20 @@ function renderAppointmentsTable() {
     `;
   }).join("");
 }
+
+// فتح رسالة واتساب جاهزة للحلاق من حساب المالك التجاري.
+window.notifyBarberWhatsApp = function(apptId) {
+  const appointment = appointments.find((item) => item.id === apptId);
+  if (!appointment) return;
+  const barber = barbers.find((item) => item.id === appointment.barberId);
+  if (!barber || !barber.phone) {
+    showToast("لا يوجد رقم هاتف محفوظ لهذا الحلاق.", "warning");
+    return;
+  }
+  const phone = barber.phone.replace(/\D/g, "").replace(/^0/, "213");
+  const message = encodeURIComponent(`مرحباً ${barber.name}، لديك حجز جديد في صالون المقص الذهبي:\n\nرقم الحجز: ${appointment.id}\nالزبون: ${appointment.clientName}\nهاتف الزبون: ${appointment.clientPhone}\nالخدمة: ${appointment.serviceName}\nالتاريخ: ${appointment.date}\nالوقت: ${appointment.time}${appointment.notes ? `\nملاحظات: ${appointment.notes}` : ""}\n\nيرجى فتح لوحة الحلاق لتأكيد الموعد أو اقتراح وقت بديل.`);
+  window.open(`https://wa.me/${phone}?text=${message}`, "_blank", "noopener,noreferrer");
+};
 
 // Update Appointment Status
 window.updateAppointmentStatus = async function(apptId, newStatus) {
@@ -570,7 +448,7 @@ window.updateAppointmentStatus = async function(apptId, newStatus) {
   target.status = newStatus;
   safeSet("barbershop_appointments", appointments);
   await updateAppointmentStatusCloud(apptId, newStatus);
-  showToast(`تم تحديث حالة الموعد ${apptId} في Firebase إلى ${newStatus === "accepted" ? "مقبول ✅" : "ملغي ❌"}`, "success");
+  showToast(`تم تحديث حالة الموعد ${apptId} في Supabase إلى ${newStatus === "accepted" ? "مقبول ✅" : "ملغي ❌"}`, "success");
   renderAppointmentsTable();
   updateMetrics();
 };
@@ -589,6 +467,9 @@ window.deleteAppointment = async function(apptId) {
 
 // Setup Event Listeners
 function setupEventListeners() {
+  if (eventListenersInitialized) return;
+  eventListenersInitialized = true;
+
   // Tabs Switcher
   document.querySelectorAll(".owner-tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -602,46 +483,67 @@ function setupEventListeners() {
     });
   });
 
-  // Owner Login Form Submission (Email + Password)
-  const pinForm = document.getElementById("owner-pin-form");
-  if (pinForm) {
-    pinForm.addEventListener("submit", (e) => {
+  // تسجيل دخول المالك أو إنشاء الحساب لأول مرة
+  const ownerForm = document.getElementById("owner-pin-form");
+  if (ownerForm) {
+    ownerForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const emailInput = document.getElementById("owner-email-input");
-      const passwordInput = document.getElementById("owner-password-input") || document.getElementById("owner-pin-input");
-      
-      const enteredEmail = emailInput ? emailInput.value.trim().toLowerCase() : "";
-      const enteredPass = passwordInput ? passwordInput.value.trim() : "";
-      const actualPin = safeGet("barbershop_owner_pin", "admin2026");
-      const actualEmail = safeGet("barbershop_owner_email", "wahablila31000@gmail.com").toLowerCase();
-
-      const isEmailValid = enteredEmail === actualEmail || enteredEmail === "wahablila31000@gmail.com";
-      const isPassValid = enteredPass === actualPin || enteredPass === "admin2026";
-
-      if (isEmailValid && isPassValid) {
-        sessionStorage.setItem("barbershop_owner_auth", "true");
-        sessionStorage.setItem("barbershop_owner_email", enteredEmail);
-        showToast("مرحباً بك يا صاحب الصالون! تم التحقق بنجاح 👑", "success");
+      const password = document.getElementById("owner-pin-input").value;
+      try {
+        const credential = await signInOwner(password);
+        // لا نعتمد على تأخر onAuthStateChanged وحده بعد تسجيل الدخول.
+        window.supabaseOwnerUser = credential.user;
         updateAuthView();
-      } else if (!isEmailValid) {
-        showToast("البريد الإلكتروني غير مطابق لبريد صاحب الصالون (wahablila31000@gmail.com)!", "error");
-      } else {
-        showToast("كلمة المرور غير صحيحة! (الافتراضية: admin2026 ويمكنك تغييرها من الإعدادات)", "error");
+        showToast("تم تسجيل الدخول عبر Supabase بنجاح", "success");
+      } catch (error) {
+        const code = error?.code || "";
+        const message = code === "auth/invalid-credential" || code === "auth/wrong-password"
+          ? "كلمة مرور المالك لا تطابق كلمة المرور المسجلة في Supabase. استخدم زر «نسيت كلمة المرور؟»."
+          : code === "auth/user-not-found"
+            ? "حساب المالك غير موجود في Supabase. اضغط «إنشاء حساب المالك لأول مرة»."
+            : code === "auth/operation-not-allowed"
+              ? "تسجيل الدخول بالبريد وكلمة المرور غير مفعّل في Supabase Authentication."
+              : error?.message || "تعذر تسجيل الدخول إلى Supabase.";
+        console.error("Owner login failed:", error);
+        showToast(message, "error");
       }
     });
   }
+  document.getElementById("owner-create-account-btn")?.addEventListener("click", async () => {
+    const password = document.getElementById("owner-pin-input").value;
+    if (!password || password.length < 8) {
+      showToast("اختر كلمة مرور من 8 أحرف على الأقل أولاً", "warning");
+      return;
+    }
+    try {
+      await registerOwner(password);
+      showToast("تم إنشاء حساب المالك في Supabase. احفظ كلمة المرور بأمان.", "success");
+    } catch (error) {
+      showToast(error.code === "auth/email-already-in-use" ? "حساب المالك موجود، استخدم زر الدخول." : "تعذر إنشاء الحساب، تحقق من إعداد Supabase.", "error");
+    }
+  });
 
-  // Toggle Password visibility
+  document.getElementById("owner-forgot-password-btn")?.addEventListener("click", async () => {
+    try {
+      await resetOwnerPassword();
+      showToast("تم إرسال رابط إعادة التعيين إلى بريد المالك. افحص الوارد والرسائل غير المرغوب فيها.", "success");
+    } catch (error) {
+      showToast("تعذر إرسال الرابط. تأكد أن البريد مسجل في Supabase وأن Email/Password مفعّل.", "error");
+    }
+  });
+
+  // Toggle PIN visibility
   document.getElementById("toggle-pin-visibility")?.addEventListener("click", () => {
-    const input = document.getElementById("owner-password-input") || document.getElementById("owner-pin-input");
+    const input = document.getElementById("owner-pin-input");
     if (input) {
       input.type = input.type === "password" ? "text" : "password";
     }
   });
 
   // Logout
-  document.getElementById("owner-logout-btn")?.addEventListener("click", () => {
-    sessionStorage.removeItem("barbershop_owner_auth");
+  document.getElementById("owner-logout-btn")?.addEventListener("click", async () => {
+    await signOutSupabase();
+    window.supabaseOwnerUser = null;
     showToast("تم تسجيل الخروج بنجاح", "info");
     updateAuthView();
   });
@@ -668,7 +570,7 @@ function setupEventListeners() {
 
       safeSet("barbershop_ads", updatedAds);
       await saveAdsCloud(updatedAds);
-      showToast("تم حفظ ونشر جميع المساحات الإعلانية في Firebase! ستظهر فوراً في موقع الزبائن 📢", "success");
+      showToast("تم حفظ ونشر جميع المساحات الإعلانية في Supabase! ستظهر فوراً في موقع الزبائن 📢", "success");
       refreshAdPreview("header");
       refreshAdPreview("middle");
       refreshAdPreview("footer");
@@ -696,55 +598,74 @@ function setupEventListeners() {
   if (addBarberForm) {
     addBarberForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      barbers = safeGet("barbershop_barbers", DEFAULT_BARBERS);
+      barbers = safeGet("barbershop_barbers", []);
 
       const username = document.getElementById("add-barber-username").value.trim().toLowerCase();
+      const submitButton = addBarberForm.querySelector("button[type='submit']");
+      if (!username || !/^[a-z0-9._-]{3,30}$/.test(username)) {
+        showToast("اسم الدخول يجب أن يكون 3 إلى 30 حرفاً إنجليزياً أو رقماً، دون مسافات.", "warning");
+        return;
+      }
       // Check if username taken
       if (barbers.some(b => b.username?.toLowerCase() === username)) {
         showToast("اسم الدخول هذا مستخدم مسبقاً، يرجى اختيار اسم مستخدم آخر", "error");
         return;
       }
 
-      const newBarber = {
-        id: `barber-${Date.now()}`,
-        name: document.getElementById("add-barber-name").value.trim(),
-        role: document.getElementById("add-barber-role").value.trim(),
-        phone: document.getElementById("add-barber-phone").value.trim(),
-        experience: document.getElementById("add-barber-exp").value.trim() || "5 سنوات خبرة",
-        username: username,
-        password: document.getElementById("add-barber-password").value.trim(),
-        image: document.getElementById("add-barber-image").value.trim() || "./public/images/barber_karim_1792939478110.jpg",
-        available: true,
-        workingHours: "09:00 ص - 21:00 م"
-      };
-
-      barbers.push(newBarber);
-      safeSet("barbershop_barbers", barbers);
-      await saveBarberCloud(newBarber);
-      showToast(`تمت إضافة الحلاق "${newBarber.name}" وتخزينه في Firebase بنجاح!`, "success");
-      window.closeModal("#modal-add-barber");
-      addBarberForm.reset();
-      renderBarbersCredentials();
-    });
-  }
-
-  // Change PIN Form
-  const changePinForm = document.getElementById("change-pin-form");
-  if (changePinForm) {
-    changePinForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const cur = document.getElementById("current-pin-input").value.trim();
-      const next = document.getElementById("new-pin-input").value.trim();
-      const actualPin = safeGet("barbershop_owner_pin", "admin2026");
-
-      if (cur !== actualPin) {
-        showToast("الرمز السري الحالي غير صحيح!", "error");
+      const password = document.getElementById("add-barber-password").value.trim();
+      if (password.length < 8) {
+        showToast("كلمة مرور الحلاق يجب أن تكون 8 أحرف على الأقل", "warning");
         return;
       }
-
-      safeSet("barbershop_owner_pin", next);
-      showToast("تم تحديث الرمز السري بنجاح! احفظه جيداً.", "success");
-      changePinForm.reset();
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "جارٍ إنشاء الحساب والحفظ...";
+      }
+      try {
+        const account = await createBarberAccount(username, password);
+        const newBarber = {
+          id: `barber-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          name: document.getElementById("add-barber-name").value.trim(),
+          role: document.getElementById("add-barber-role").value.trim(),
+          phone: document.getElementById("add-barber-phone").value.trim(),
+          experience: document.getElementById("add-barber-exp").value.trim() || "حلاق محترف",
+          username,
+          authEmail: account.email,
+          authUid: account.uid,
+          image: document.getElementById("add-barber-image").value.trim() || "",
+          available: true,
+          workingHours: "09:00 ص - 21:00 م"
+        };
+        const savedInSupabase = await saveBarberCloud(newBarber);
+        if (!savedInSupabase) throw new Error("تعذر حفظ سجل الحلاق في Supabase.");
+        barbers = [...barbers.filter((item) => item.id !== newBarber.id), newBarber];
+        safeSet("barbershop_barbers", barbers);
+        const waPhone = newBarber.phone.replace(/\D/g, "").replace(/^0/, "213");
+        const message = encodeURIComponent(`مرحباً ${newBarber.name}، تم إنشاء حسابك في صالون المقص الذهبي.\nرابط الدخول: ${window.location.origin}${window.location.pathname.replace(/private-owner-console-7x4m\.html$/, "barber.html")}\nاسم المستخدم: ${username}\nكلمة المرور: ${password}`);
+        if (waPhone) window.open(`https://wa.me/${waPhone}?text=${message}`, "_blank", "noopener");
+        showToast(`تم حفظ ${newBarber.name} في Supabase وفتح رسالة واتساب جاهزة`, "success");
+        window.closeModal("#modal-add-barber");
+        addBarberForm.reset();
+        renderBarbersCredentials();
+      } catch (error) {
+        const code = error?.code || "";
+        const message = code === "auth/email-already-in-use"
+          ? "اسم الدخول مستخدم في Supabase من قبل. اختر اسماً آخر."
+          : code === "auth/operation-not-allowed"
+            ? "تسجيل الدخول بالبريد وكلمة المرور غير مفعّل في Supabase Authentication."
+            : code === "auth/invalid-api-key"
+              ? "مفتاح Supabase غير صالح. تحقق من إعدادات المشروع."
+              : code === "PERMISSION_DENIED"
+                ? "Supabase رفض حفظ الحلاق: قواعد قاعدة بيانات Supabase لا تسمح لحساب المالك بالكتابة إلى جدول الحلاقين."
+              : error?.message || "تعذر إنشاء حساب الحلاق أو حفظه في Supabase.";
+        console.error("Barber creation failed:", error);
+        showToast(message, "error");
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = "حفظ وإضافة الحلاق فوراً";
+        }
+      }
     });
   }
 
@@ -762,7 +683,7 @@ function setupEventListeners() {
     }
     safeSet("barbershop_visitors", val);
     await updateVisitorsCloud(val);
-    showToast(`تم تحديث عداد الزوار في Firebase إلى: ${val.toLocaleString("ar-DZ")}`, "success");
+    showToast(`تم تحديث عداد الزوار في Supabase إلى: ${val.toLocaleString("ar-DZ")}`, "success");
     updateMetrics();
   });
 
@@ -770,7 +691,7 @@ function setupEventListeners() {
     if (confirm("هل تريد تصفير عداد زوار الموقع إلى 0؟")) {
       safeSet("barbershop_visitors", 0);
       await updateVisitorsCloud(0);
-      showToast("تم تصفير عداد الزوار بنجاح في Firebase", "info");
+      showToast("تم تصفير عداد الزوار بنجاح في Supabase", "info");
       updateMetrics();
     }
   });
@@ -780,12 +701,8 @@ function setupEventListeners() {
     if (confirm("تحذير: سيتم إعادة ضبط قائمة الحلاقين الثلاثة والإعلانات الافتراضية. هل تود المتابعة؟")) {
       safeSet("barbershop_barbers", DEFAULT_BARBERS);
       safeSet("barbershop_ads", DEFAULT_ADS);
-      safeSet("barbershop_owner_pin", "admin2026");
-      for (const b of DEFAULT_BARBERS) {
-        await saveBarberCloud(b);
-      }
       await saveAdsCloud(DEFAULT_ADS);
-      showToast("تمت استعادة البيانات الافتراضية وتحديث Firebase بنجاح!", "success");
+      showToast("تم تحديث الإعلانات في Supabase. لا يتم إنشاء حسابات افتراضية.", "success");
       initDashboard();
     }
   });
@@ -793,5 +710,10 @@ function setupEventListeners() {
 
 // Initial Boot
 document.addEventListener("DOMContentLoaded", () => {
-  updateAuthView();
+  // مستمعو الدخول والاستعادة يجب أن يعملوا قبل دخول المالك، لا داخل لوحة التحكم فقط.
+  setupEventListeners();
+  subscribeAuth((user) => {
+    window.supabaseOwnerUser = user && user.email?.toLowerCase() === OWNER_EMAIL.toLowerCase() ? user : null;
+    updateAuthView();
+  });
 });

@@ -2,7 +2,7 @@
  * صالون المقص الذهبي - بن فريحة، وهران
  * Golden Scissors Barbershop - Ben Freha, Oran
  * Vanilla JavaScript Core Application
- * متصل بـ Firebase Firestore (ykin-1241b)
+ * متصل بـ Supabase PostgreSQL (ykin-1241b)
  */
 
 import {
@@ -11,59 +11,15 @@ import {
   subscribeAds,
   subscribeVisitors,
   saveAppointmentCloud,
-  seedBarbersIfEmpty,
   updateVisitorsCloud,
-  incrementVisitorCounter
-} from "./database.js";
+  incrementVisitorCounter,
+  signInBarber,
+  ensureSupabaseSession
+} from "./supabase.js";
 
 // Initial Seed Data
-const DEFAULT_BARBERS = [
-  {
-    id: "barber-karim",
-    name: "كريم بن عيسى",
-    role: "خبير القصات الكلاسيكية وتصفيف اللحية الملكية",
-    experience: "10 سنوات خبرة",
-    rating: 4.9,
-    reviewsCount: 142,
-    phone: "0555 11 22 33",
-    username: "karim",
-    password: "karim123",
-    image: "./public/images/barber_karim_1792939478110.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80",
-    available: true,
-    workingHours: "09:00 ص - 21:00 م"
-  },
-  {
-    id: "barber-youssef",
-    name: "يوسف بلحاج",
-    role: "متخصص تدريج الشعر الفيد (Fade) ونحت اللحية",
-    experience: "7 سنوات خبرة",
-    rating: 4.9,
-    reviewsCount: 118,
-    phone: "0555 22 33 44",
-    username: "youssef",
-    password: "youssef123",
-    image: "./public/images/barber_youssef_1792939479092.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=600&q=80",
-    available: true,
-    workingHours: "10:00 ص - 22:00 م"
-  },
-  {
-    id: "barber-sami",
-    name: "سامي بوعلام",
-    role: "مصفف كبار الشخصيات VIP ومساج وعلاجات البروتين",
-    experience: "8 سنوات خبرة",
-    rating: 5.0,
-    reviewsCount: 165,
-    phone: "0555 33 44 55",
-    username: "sami",
-    password: "sami123",
-    image: "./public/images/barber_sami_1792939479036.jpg",
-    fallbackImage: "https://images.unsplash.com/photo-1517832606589-7629c3397143?auto=format&fit=crop&w=600&q=80",
-    available: true,
-    workingHours: "09:00 ص - 20:00 م"
-  }
-];
+// حسابات الحلاقين تُنشأ من لوحة المالك وتُقرأ من Supabase فقط.
+const DEFAULT_BARBERS = [];
 
 const DEFAULT_SERVICES = [
   {
@@ -116,6 +72,9 @@ const DEFAULT_SERVICES = [
   }
 ];
 
+const DEFAULT_AVAILABLE_DAYS = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+const DEFAULT_AVAILABLE_TIMES = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"];
+
 const DEFAULT_ADS = {
   header: {
     enabled: true,
@@ -124,7 +83,7 @@ const DEFAULT_ADS = {
         <span style="background: #fff; color: #b45309; padding: 2px 8px; border-radius: 6px; font-size: 0.8rem;">عرض خاص</span>
         <span>🎉 خصم 20% على باقة VIP الكاملة طيلة هذا الأسبوع لزبائن بن فريحة بوهران!</span>
       </div>
-      <a href="#services" style="background: #111; color: #fef08a; padding: 6px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; text-decoration: none; white-space: nowrap;">استفد الآن</a>
+      <a href="#barbers" style="background: #111; color: #fef08a; padding: 6px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; text-decoration: none; white-space: nowrap;">احجز الآن</a>
     </div>`
   },
   middle: {
@@ -132,7 +91,7 @@ const DEFAULT_ADS = {
     html: `<div style="background: #17171d; border: 1px dashed #d97706; padding: 16px; border-radius: 14px; text-align: center;">
       <p style="color: #f59e0b; font-weight: 700; margin-bottom: 4px;">مساحة إعلانية مخصصة (وسط الموقع)</p>
       <p style="color: #a1a1aa; font-size: 0.85rem; margin-bottom: 8px;">يمكن لصاحب الصالون لصق أي كود إعلاني HTML (بنرات أو Google Ads) من لوحة الإدارة.</p>
-      <span style="display: inline-block; background: #27272a; color: #e4e4e7; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem;">رقم هاتف الصالون للاستفسار: 0555 12 34 56</span>
+      <span style="display: inline-block; background: #27272a; color: #e4e4e7; padding: 4px 12px; border-radius: 6px; font-size: 0.8rem;">رقم هاتف الصالون للاستفسار: 0777 11 76 63</span>
     </div>`
   },
   footer: {
@@ -146,7 +105,7 @@ const DEFAULT_ADS = {
   }
 };
 
-// لا توجد بيانات وهمية - يتم جلب المواعيد الحقيقية حصرياً من Firebase Realtime Database
+// لا توجد بيانات وهمية - يتم جلب المواعيد الحقيقية حصرياً من Supabase PostgreSQL
 const DEFAULT_APPOINTMENTS = [];
 
 // LocalStorage Safe Utilities
@@ -176,15 +135,13 @@ const State = {
   services: safeGet("barbershop_services", DEFAULT_SERVICES),
   appointments: safeGet("barbershop_appointments", []),
   ads: safeGet("barbershop_ads", DEFAULT_ADS),
-  ownerPin: safeGet("barbershop_owner_pin", "admin2026"),
   currentBarberSession: safeGet("barbershop_active_barber", null),
-  isOwnerLoggedIn: false,
   visitors: safeGet("barbershop_visitors", 0),
   selectedBarberForBooking: "",
   selectedServiceForBooking: ""
 };
 
-// Track visitor count in Firebase Realtime Database
+// Track visitor count in Supabase PostgreSQL
 (function recordVisit() {
   try {
     const visited = sessionStorage.getItem("barbershop_visited");
@@ -260,12 +217,15 @@ function renderBarbers() {
   if (!container) return;
 
   container.innerHTML = State.barbers.map(barber => {
+    const publicName = barber.displayName || barber.name;
+    const publicRole = barber.displayRole || barber.role;
+    const publicImage = barber.profileImage || barber.image;
     return `
       <div class="barber-card" data-id="${barber.id}">
         <div class="barber-img-wrap">
           <img 
-            src="${barber.image}" 
-            alt="${barber.name}"
+            src="${publicImage}"
+            alt="${publicName}"
             class="barber-img"
             loading="lazy"
             onerror="this.onerror=null; this.src='${barber.fallbackImage || 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80'}';"
@@ -282,8 +242,8 @@ function renderBarbers() {
         </div>
 
         <div class="barber-info">
-          <h3 class="barber-name">${barber.name}</h3>
-          <p class="barber-role">${barber.role}</p>
+          <h3 class="barber-name">${publicName}</h3>
+          <p class="barber-role">${publicRole}</p>
 
           <div class="barber-meta-pills">
             <span class="meta-pill">⏱️ ${barber.experience}</span>
@@ -291,6 +251,7 @@ function renderBarbers() {
           </div>
 
           <div class="barber-actions">
+            <button type="button" class="btn-secondary w-full view-barber-profile-btn" data-barber-id="${barber.id}" style="margin-bottom:8px;">عرض التسريحات والأوقات</button>
             <button 
               type="button" 
               class="btn-primary w-full book-with-barber-btn"
@@ -313,6 +274,37 @@ function renderBarbers() {
       openBookingModal(barberId);
     });
   });
+
+  $$(".view-barber-profile-btn").forEach(btn => {
+    btn.addEventListener("click", () => openBarberProfile(btn.getAttribute("data-barber-id")));
+  });
+
+  $$("#barbers-grid .barber-card").forEach(card => {
+    card.addEventListener("click", (event) => {
+      if (!event.target.closest("button, a")) openBarberProfile(card.dataset.id);
+    });
+  });
+}
+
+function openBarberProfile(barberId) {
+  const barber = State.barbers.find((item) => item.id === barberId);
+  if (!barber) return;
+  const publicName = barber.displayName || barber.name;
+  const publicRole = barber.displayRole || barber.role;
+  const image = barber.profileImage || barber.image;
+  $("#profile-modal-image").src = image;
+  $("#profile-modal-image").alt = publicName;
+  $("#profile-modal-name").textContent = publicName;
+  $("#profile-modal-role").textContent = publicRole;
+  $("#profile-modal-days").innerHTML = (barber.availableDays || DEFAULT_AVAILABLE_DAYS).map(day => `<span style="background:#1e293b; color:#bae6fd; padding:4px 7px; border-radius:6px; font-size:.72rem;">${day}</span>`).join("");
+  $("#profile-modal-times").innerHTML = (barber.availableTimes || DEFAULT_AVAILABLE_TIMES).map(time => `<span style="background:#3b2f13; color:#fde68a; padding:4px 7px; border-radius:6px; font-size:.72rem;">${time}</span>`).join("");
+  const styles = Array.isArray(barber.hairstyles) ? barber.hairstyles : [];
+  $("#profile-modal-hairstyles").innerHTML = styles.length ? styles.map(style => `<div style="display:flex; justify-content:space-between; background:#11141d; border:1px solid #272c3d; border-radius:8px; padding:9px 11px; color:#e4e4e7;"><span>${style.name}</span><strong style="color:#fcd34d;">${style.price} دج</strong></div>`).join("") : `<div class="empty-state">لم يضف الحلاق تسريحاته وأسعاره بعد.</div>`;
+  $("#profile-modal-book-btn").onclick = () => {
+    closeModal("#modal-barber-profile");
+    openBookingModal(barber.id);
+  };
+  openModal("#modal-barber-profile");
 }
 
 // Render Services List
@@ -396,17 +388,21 @@ function renderAds() {
 function updateBookingSelects() {
   const barberSelect = $("#booking-barber-select");
   if (barberSelect) {
+    const currentBarberId = barberSelect.value;
     barberSelect.innerHTML = `
-      <option value="">أي حلاق متاح (الأسرع دوراً)</option>
-      ${State.barbers.map(b => `<option value="${b.id}">${b.name} (${b.role})</option>`).join("")}
+      <option value="">اختر الحلاق أولاً...</option>
+      ${State.barbers.map(b => `<option value="${b.id}">${b.displayName || b.name}</option>`).join("")}
     `;
+    barberSelect.value = currentBarberId;
   }
 
   const srvSelect = $("#booking-service-select");
   if (srvSelect) {
+    const selectedBarber = State.barbers.find((barber) => barber.id === barberSelect?.value);
+    const hairstyles = Array.isArray(selectedBarber?.hairstyles) ? selectedBarber.hairstyles : [];
     srvSelect.innerHTML = `
-      <option value="">اختر الخدمة المطلوبة...</option>
-      ${State.services.map(s => `<option value="${s.id}">${s.name} - ${s.price} د.ج (${s.duration} د)</option>`).join("")}
+      <option value="">${selectedBarber ? "اختر التسريحة المطلوبة..." : "اختر الحلاق أولاً..."}</option>
+      ${hairstyles.map((style, index) => `<option value="style-${index}">${style.name} - ${style.price} د.ج</option>`).join("")}
     `;
   }
 }
@@ -418,6 +414,7 @@ function openBookingModal(preselectedBarberId = null, preselectedServiceId = nul
   const barberSelect = $("#booking-barber-select");
   if (barberSelect && preselectedBarberId) {
     barberSelect.value = preselectedBarberId;
+    updateBookingSelects();
   }
 
   const srvSelect = $("#booking-service-select");
@@ -443,7 +440,7 @@ function openBookingModal(preselectedBarberId = null, preselectedServiceId = nul
 }
 
 // BOOKING SUBMISSION
-function handleBookingSubmit(e) {
+async function handleBookingSubmit(e) {
   e.preventDefault();
 
   const barberId = $("#booking-barber-select").value;
@@ -471,20 +468,27 @@ function handleBookingSubmit(e) {
     return;
   }
   if (!phone || phone.length < 9) {
-    showToast("يرجى إدخال رقم هاتف صالح (مثال: 0555123456)", "warning");
+    showToast("يرجى إدخال رقم هاتف صالح (مثال: 0777117663)", "warning");
     return;
   }
 
   // Find Barber and Service objects
-  let assignedBarber = State.barbers.find(b => b.id === barberId);
+  const assignedBarber = State.barbers.find(b => b.id === barberId);
   if (!assignedBarber) {
-    // If "Any", pick first available
-    assignedBarber = State.barbers[0];
+    showToast("يرجى اختيار الحلاق أولاً", "warning");
+    return;
   }
-
-  const service = State.services.find(s => s.id === serviceId) || {
-    name: "حلاقة مخصصة",
-    price: 500
+  const styleIndex = Number(String(serviceId).replace("style-", ""));
+  const selectedStyle = Array.isArray(assignedBarber.hairstyles) ? assignedBarber.hairstyles[styleIndex] : null;
+  if (!selectedStyle) {
+    showToast("هذا الحلاق لم يضف تسريحاته وأسعارها بعد", "warning");
+    return;
+  }
+  const service = {
+    id: serviceId,
+    name: selectedStyle.name,
+    price: Number(selectedStyle.price || 0),
+    duration: selectedStyle.duration || 30
   };
 
   const bookingCode = "GOLD-" + Math.floor(1000 + Math.random() * 9000);
@@ -508,8 +512,14 @@ function handleBookingSubmit(e) {
   State.appointments.unshift(newAppointment);
   safeSet("barbershop_appointments", State.appointments);
 
-  // Sync to Firebase Cloud Firestore (ykin-1241b)
-  saveAppointmentCloud(newAppointment);
+  // لا نعرض نجاحاً للزبون قبل تأكيد الحفظ في Supabase.
+  const savedInSupabase = await saveAppointmentCloud(newAppointment);
+  if (!savedInSupabase) {
+    State.appointments = State.appointments.filter((item) => item.id !== bookingCode);
+    safeSet("barbershop_appointments", State.appointments);
+    showToast("تعذر حفظ الحجز في قاعدة البيانات. تحقق من الاتصال وحاول مرة أخرى.", "error");
+    return;
+  }
 
   // Render Confirmation details
   $("#success-booking-id").textContent = bookingCode;
@@ -592,7 +602,7 @@ function handleAppointmentsLookup(phoneOrCode) {
         </div>
         ${actionExtra}
         <div class="lookup-card-actions">
-          <a href="tel:0555123456" class="btn-outline-sm">📞 اتصال بالصالون</a>
+          <a href="tel:0777117663" class="btn-outline-sm">📞 اتصال بالصالون</a>
           <button type="button" class="btn-danger-sm cancel-client-app-btn" data-id="${app.id}">إلغاء الموعد</button>
         </div>
       </div>
@@ -630,28 +640,21 @@ function handleAppointmentsLookup(phoneOrCode) {
 }
 
 // BARBER LOGIN & DASHBOARD
-function handleBarberLogin(e) {
+async function handleBarberLogin(e) {
   e.preventDefault();
   const usernameInput = $("#barber-username-input").value.trim().toLowerCase();
-  const passwordInput = $("#barber-password-input").value.trim();
-
-  const foundBarber = State.barbers.find(b => 
-    b.username.toLowerCase() === usernameInput && b.password === passwordInput
-  );
-
-  if (!foundBarber) {
-    showToast("اسم المستخدم أو كلمة المرور غير صحيحة", "error");
-    return;
+  const passwordInput = $("#barber-password-input").value;
+  try {
+    const barber = await signInBarber(usernameInput, passwordInput);
+    State.currentBarberSession = barber;
+    safeSet("barbershop_active_barber", barber);
+    closeModal("#modal-barber-login");
+    $("#barber-login-form").reset();
+    showToast(`أهلاً بك يا ${barber.name}! تم تسجيل الدخول عبر Supabase بنجاح.`, "success");
+    openBarberDashboard();
+  } catch (error) {
+    showToast("اسم المستخدم أو كلمة المرور غير صحيحة، أو لم يجهز المالك الحساب بعد.", "error");
   }
-
-  State.currentBarberSession = foundBarber;
-  safeSet("barbershop_active_barber", foundBarber);
-
-  closeModal("#modal-barber-login");
-  $("#barber-login-form").reset();
-  showToast(`أهلاً بك يا ${foundBarber.name}! تم تسجيل الدخول بنجاح.`, "success");
-
-  openBarberDashboard();
 }
 
 function openBarberDashboard() {
@@ -818,210 +821,22 @@ function renderBarberAppointments(filter = "all") {
   });
 }
 
-// OWNER PORTAL LOGIC
-function checkOwnerAccess() {
-  if (State.isOwnerLoggedIn) {
-    openOwnerModal();
-  } else {
-    const pin = prompt("🔐 أدخل كلمة مرور صاحب الصالون (الافتراضية: admin2026):");
-    if (pin === State.ownerPin || pin === "admin2026") {
-      State.isOwnerLoggedIn = true;
-      openOwnerModal();
-    } else if (pin !== null) {
-      showToast("كلمة المرور غير صحيحة!", "error");
-    }
-  }
-}
-
-function openOwnerModal() {
-  renderOwnerStats();
-  renderOwnerBarbersList();
-  loadOwnerAdsForm();
-  openModal("#modal-owner-portal");
-}
-
-function renderOwnerStats() {
-  $("#owner-stat-visitors").textContent = State.visitors;
-  $("#owner-stat-total-apps").textContent = State.appointments.length;
-  const accepted = State.appointments.filter(a => a.status === "accepted").length;
-  $("#owner-stat-accepted").textContent = accepted;
-  
-  const estimatedRevenue = State.appointments
-    .filter(a => a.status === "accepted")
-    .reduce((sum, a) => sum + (Number(a.servicePrice) || 0), 0);
-  $("#owner-stat-revenue").textContent = `${estimatedRevenue} د.ج`;
-}
-
-function renderOwnerBarbersList() {
-  const container = $("#owner-barbers-table-body");
-  if (!container) return;
-
-  container.innerHTML = State.barbers.map((b, idx) => {
-    return `
-      <tr>
-        <td><strong>${b.name}</strong></td>
-        <td><code>${b.username}</code></td>
-        <td><code>${b.password}</code></td>
-        <td>${b.phone}</td>
-        <td>
-          <button type="button" class="btn-xs btn-copy-cred" data-user="${b.username}" data-pass="${b.password}" data-name="${b.name}">
-            📋 نسخ بيانات الدخول
-          </button>
-          <button type="button" class="btn-xs btn-edit-barber" data-id="${b.id}">
-            ✏️ تعديل
-          </button>
-          ${State.barbers.length > 1 ? `
-            <button type="button" class="btn-xs btn-danger-xs btn-del-barber" data-id="${b.id}">
-              🗑️ حذف
-            </button>
-          ` : ''}
-        </td>
-      </tr>
-    `;
-  }).join("");
-
-  // Attach copy credentials
-  $$(".btn-copy-cred").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const u = btn.getAttribute("data-user");
-      const p = btn.getAttribute("data-pass");
-      const n = btn.getAttribute("data-name");
-      const textToCopy = `صالون المقص الذهبي - بن فريحة وهران\nمعلومات دخول الحلاق (${n}):\nاسم المستخدم: ${u}\nكلمة المرور: ${p}\nرابط الدخول: ${window.location.origin}${window.location.pathname}`;
-      
-      navigator.clipboard.writeText(textToCopy).then(() => {
-        showToast(`تم نسخ بيانات دخول ${n} بنجاح! يمكنك إرسالها له عبر واتساب.`, "success");
-      }).catch(() => {
-        prompt("انسخ معلومات الدخول أدناه:", textToCopy);
-      });
-    });
-  });
-
-  // Edit Barber
-  $$(".btn-edit-barber").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.getAttribute("data-id");
-      const barber = State.barbers.find(b => b.id === id);
-      if (!barber) return;
-
-      const newPass = prompt(`تعديل كلمة سر الحلاق (${barber.name}):`, barber.password);
-      if (newPass && newPass.trim()) {
-        barber.password = newPass.trim();
-        safeSet("barbershop_barbers", State.barbers);
-        showToast("تم تحديث كلمة المرور للحلاق بنجاح", "success");
-        renderOwnerBarbersList();
-      }
-    });
-  });
-
-  // Delete Barber
-  $$(".btn-del-barber").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.getAttribute("data-id");
-      if (confirm("هل أنت متأكد من حذف هذا الحلاق؟")) {
-        State.barbers = State.barbers.filter(b => b.id !== id);
-        safeSet("barbershop_barbers", State.barbers);
-        showToast("تم حذف الحلاق بنجاح", "info");
-        renderOwnerBarbersList();
-        renderBarbers();
-      }
-    });
-  });
-}
-
-// Add New Barber Form
-function handleAddNewBarber(e) {
-  e.preventDefault();
-  const name = $("#new-barber-name").value.trim();
-  const role = $("#new-barber-role").value.trim() || "حلاق محترف";
-  const experience = $("#new-barber-exp").value.trim() || "5 سنوات خبرة";
-  const phone = $("#new-barber-phone").value.trim() || "0555000000";
-  const username = $("#new-barber-user").value.trim().toLowerCase();
-  const password = $("#new-barber-pass").value.trim();
-
-  if (!name || !username || !password) {
-    showToast("يرجى ملء جميع الحقول المطلوبة (الاسم، اسم المستخدم، كلمة السر)", "warning");
-    return;
-  }
-
-  // Check unique username
-  if (State.barbers.some(b => b.username.toLowerCase() === username)) {
-    showToast("اسم المستخدم هذا مستعمل من قبل، اختر اسماً آخر", "error");
-    return;
-  }
-
-  const newBarber = {
-    id: "barber-" + Date.now(),
-    name: name,
-    role: role,
-    experience: experience,
-    rating: 5.0,
-    reviewsCount: 1,
-    phone: phone,
-    username: username,
-    password: password,
-    image: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80",
-    fallbackImage: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80",
-    available: true,
-    workingHours: "09:00 ص - 21:00 م"
-  };
-
-  State.barbers.push(newBarber);
-  safeSet("barbershop_barbers", State.barbers);
-
-  showToast(`تمت إضافة الحلاق الجديد (${name}) بنجاح!`, "success");
-  $("#add-barber-form").reset();
-  renderOwnerBarbersList();
-  renderBarbers();
-}
-
-// Load and Save Owner Ads Form
-function loadOwnerAdsForm() {
-  $("#ad-top-html").value = State.ads.header?.html || "";
-  $("#ad-top-enabled").checked = !!State.ads.header?.enabled;
-
-  $("#ad-mid-html").value = State.ads.middle?.html || "";
-  $("#ad-mid-enabled").checked = !!State.ads.middle?.enabled;
-
-  $("#ad-footer-html").value = State.ads.footer?.html || "";
-  $("#ad-footer-enabled").checked = !!State.ads.footer?.enabled;
-}
-
-function handleSaveAds(e) {
-  e.preventDefault();
-
-  State.ads = {
-    header: {
-      enabled: $("#ad-top-enabled").checked,
-      html: $("#ad-top-html").value
-    },
-    middle: {
-      enabled: $("#ad-mid-enabled").checked,
-      html: $("#ad-mid-html").value
-    },
-    footer: {
-      enabled: $("#ad-footer-enabled").checked,
-      html: $("#ad-footer-html").value
-    }
-  };
-
-  safeSet("barbershop_ads", State.ads);
-  renderAds();
-  showToast("تم حفظ الإعلانات وتحديثها مباشرة في الموقع! 🎯", "success");
-}
-
 // INIT APPLICATION
-function initApp() {
-  // Seed initial barbers if empty
-  seedBarbersIfEmpty(DEFAULT_BARBERS);
+async function initApp() {
+  try {
+    await ensureSupabaseSession();
+  } catch (error) {
+    console.error("Supabase session initialization failed:", error);
+    showToast("تعذر الاتصال بقاعدة البيانات. فعّل Anonymous sign-in في Supabase ثم أعد تحميل الموقع.", "error");
+    return;
+  }
 
-  // Real-time Cloud Firestore Subscriptions (ykin-1241b)
+  // Real-time Supabase Realtime subscriptions
   subscribeBarbers((cloudBarbers) => {
-    if (cloudBarbers && cloudBarbers.length > 0) {
-      State.barbers = cloudBarbers;
-      safeSet("barbershop_barbers", cloudBarbers);
-      renderBarbers();
-      updateBookingSelects();
-    }
+    State.barbers = cloudBarbers || [];
+    safeSet("barbershop_barbers", State.barbers);
+    renderBarbers();
+    updateBookingSelects();
   });
 
   subscribeAds((cloudAds) => {
@@ -1042,13 +857,11 @@ function initApp() {
   });
 
   subscribeAppointments((cloudAppts) => {
-    if (cloudAppts && cloudAppts.length > 0) {
-      State.appointments = cloudAppts;
-      safeSet("barbershop_appointments", cloudAppts);
-      const lookupInput = $("#lookup-phone-input");
-      if (lookupInput && lookupInput.value.trim()) {
-        handleAppointmentsLookup(lookupInput.value.trim());
-      }
+    State.appointments = cloudAppts || [];
+    safeSet("barbershop_appointments", State.appointments);
+    const lookupInput = $("#lookup-phone-input");
+    if (lookupInput && lookupInput.value.trim()) {
+      handleAppointmentsLookup(lookupInput.value.trim());
     }
   });
 
@@ -1062,6 +875,9 @@ function initApp() {
   if (bookingForm) {
     bookingForm.addEventListener("submit", handleBookingSubmit);
   }
+  $("#booking-barber-select")?.addEventListener("change", () => {
+    updateBookingSelects();
+  });
 
   // Lookup Form Submit
   const lookupForm = $("#lookup-form");
@@ -1100,43 +916,6 @@ function initApp() {
     });
   }
 
-  // Owner Tabs
-  $$(".owner-tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      $$(".owner-tab-btn").forEach(b => b.classList.remove("active"));
-      $$(".owner-tab-content").forEach(c => c.classList.remove("active"));
-      btn.classList.add("active");
-      const targetId = btn.getAttribute("data-target");
-      $(targetId)?.classList.add("active");
-    });
-  });
-
-  // Owner Add Barber Form
-  const addBarberForm = $("#add-barber-form");
-  if (addBarberForm) {
-    addBarberForm.addEventListener("submit", handleAddNewBarber);
-  }
-
-  // Owner Ads Form
-  const ownerAdsForm = $("#owner-ads-form");
-  if (ownerAdsForm) {
-    ownerAdsForm.addEventListener("submit", handleSaveAds);
-  }
-
-  // Reset Visitors Counter
-  const resetVisBtn = $("#reset-visitors-btn");
-  if (resetVisBtn) {
-    resetVisBtn.addEventListener("click", () => {
-      const newCount = prompt("أدخل قيمة عدد الزوار الجديدة:", State.visitors);
-      if (newCount !== null && !isNaN(newCount)) {
-        State.visitors = parseInt(newCount, 10);
-        safeSet("barbershop_visitors", State.visitors);
-        renderOwnerStats();
-        showToast("تم تحديث عداد الزوار بنجاح", "success");
-      }
-    });
-  }
-
   // Modal Close Buttons
   $$(".modal-close-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -1169,6 +948,7 @@ function initApp() {
       openModal("#modal-barber-login");
     }
   });
+
   // Bottom Navigation Mobile
   $("#mob-nav-home")?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: 'smooth' }));
   $("#mob-nav-barbers")?.addEventListener("click", () => $("#barbers")?.scrollIntoView({ behavior: 'smooth' }));
