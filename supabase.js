@@ -9,6 +9,7 @@ const provisioningSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: "golden-scissors-provisioning" }
 });
 export const OWNER_EMAIL = "wahablila31000@gmail.com";
+export const PUBLIC_APP_URL = "https://usadzoran.github.io/Coiffeur-";
 const BARBERS = "salon_barbers";
 const APPOINTMENTS = "salon_appointments";
 
@@ -17,8 +18,8 @@ const appointmentFromRow = (r) => r && ({ id:r.id, barberId:r.barber_id, barberN
 const errorText = (e, fallback) => e?.code === "42501" ? "Supabase رفض العملية بسبب سياسة RLS." : (e?.message || fallback);
 
 export async function signInOwner(password) { const {data,error} = await supabase.auth.signInWithPassword({email:OWNER_EMAIL,password}); if(error) throw error; return {user:data.user}; }
-export async function registerOwner(password) { const {data,error} = await supabase.auth.signUp({email:OWNER_EMAIL,password,options:{data:{role:"owner"}}}); if(error) throw error; if(data.user && data.session) { const r=await supabase.from("salon_owner_roles").upsert({user_id:data.user.id,role:"owner"}); if(r.error) throw r.error; } return {user:data.user,session:data.session}; }
-export async function resetOwnerPassword() { const {error}=await supabase.auth.resetPasswordForEmail(OWNER_EMAIL,{redirectTo:window.location.origin+window.location.pathname}); if(error) throw error; }
+export async function registerOwner(password) { const {data,error} = await supabase.auth.signUp({email:OWNER_EMAIL,password,options:{data:{role:"owner"}, emailRedirectTo:PUBLIC_APP_URL+"/private-owner-console-7x4m.html"}}); if(error) throw error; if(data.user && data.session) { const r=await supabase.from("salon_owner_roles").upsert({user_id:data.user.id,role:"owner"}); if(r.error) throw r.error; } return {user:data.user,session:data.session}; }
+export async function resetOwnerPassword() { const {error}=await supabase.auth.resetPasswordForEmail(OWNER_EMAIL,{redirectTo:PUBLIC_APP_URL+"/private-owner-console-7x4m.html"}); if(error) throw error; }
 export function subscribeAuth(callback) { supabase.auth.getUser().then(({data})=>callback(data.user||null)); const {data}=supabase.auth.onAuthStateChange((_e,s)=>callback(s?.user||null)); return ()=>data.subscription.unsubscribe(); }
 export function signOutSupabase() { return supabase.auth.signOut(); }
 export async function ensureSupabaseSession() { const {data}=await supabase.auth.getSession(); return data.session?.user || null; }
