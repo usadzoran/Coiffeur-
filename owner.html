@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>لوحة تحكم صاحب الصالون - صالون المقص الذهبي بن فريحة</title>
+    <meta name="description" content="البوابة الإدارية المستقلة لصاحب صالون المقص الذهبي في بن فريحة بوهران لإدارة الحلاقين، كلمات السر، الإعلانات بـ HTML وعداد الزوار." />
+    <meta property="og:title" content="لوحة تحكم صاحب الصالون - المقص الذهبي" />
+    <meta property="og:description" content="إدارة الحلاقين وكلمات السر والإعلانات لصالون المقص الذهبي بن فريحة وهران" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+    <style>
+      .owner-page-body {
+        background: #090a0f;
+        min-height: 100vh;
+        color: #f4f4f5;
+        font-family: 'Cairo', sans-serif;
+      }
+      .owner-navbar {
+        background: rgba(18, 20, 27, 0.95);
+        border-bottom: 1px solid #272a34;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        backdrop-filter: blur(12px);
+      }
+      .owner-nav-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        max-width: 1300px;
+        margin: 0 auto;
+      }
+      .badge-owner {
+        background: linear-gradient(135deg, rgba(217,119,6,0.2) 0%, rgba(245,158,11,0.1) 100%);
+        border: 1px solid rgba(245,158,11,0.4);
+        color: #fbbf24;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .url-copy-box {
+        background: #141720;
+        border: 1px solid #292d3b;
+        border-radius: 12px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .url-text {
+        font-family: monospace;
+        font-size: 0.85rem;
+        color: #38bdf8;
+        direction: ltr;
+        word-break: break-all;
+      }
+      .owner-tab-nav {
+        display: flex;
+        gap: 8px;
+        border-bottom: 1px solid #272a34;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        margin-bottom: 24px;
+        scrollbar-width: thin;
+      }
+      .owner-tab-btn {
+        background: transparent;
+        color: #9ca3af;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 10px 18px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        border-radius: 8px 8px 0 0;
+        transition: all 0.2s ease;
+      }
+      .owner-tab-btn:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .owner-tab-btn.active {
+        color: #fbbf24;
+        border-bottom-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.08);
+      }
+      .ad-editor-box {
+        background: #12141c;
+        border: 1px solid #232734;
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .html-code-area {
+        width: 100%;
+        min-height: 140px;
+        background: #090a0f;
+        border: 1px solid #2d3345;
+        border-radius: 10px;
+        color: #a7f3d0;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.85rem;
+        padding: 12px;
+        direction: ltr;
+        text-align: left;
+        line-height: 1.5;
+        margin: 10px 0;
+        resize: vertical;
+      }
+      .html-code-area:focus {
+        outline: none;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+      }
+      .ad-preview-container {
+        margin-top: 10px;
+        padding: 14px;
+        background: #0d0f15;
+        border: 1px dashed #3a4155;
+        border-radius: 10px;
+        min-height: 50px;
+      }
+      .cred-card {
+        background: #12151e;
+        border: 1px solid #272c3d;
+        border-radius: 14px;
+        padding: 16px;
+        transition: all 0.2s ease;
+      }
+      .cred-card:hover {
+        border-color: rgba(245, 158, 11, 0.5);
+      }
+      .code-pill {
+        background: #1e2230;
+        color: #38bdf8;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.9rem;
+      }
+      .action-pill-btn {
+        background: #1e2230;
+        color: #f4f4f5;
+        border: 1px solid #33394d;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+      }
+      .action-pill-btn:hover {
+        background: #2a3044;
+        border-color: #f59e0b;
+        color: #fbbf24;
+      }
+    </style>
+  </head>
+  <body class="owner-page-body">
+    <!-- Owner Top Navigation -->
+    <header class="owner-navbar">
+      <div class="owner-nav-container">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="background: linear-gradient(135deg, #d97706, #f59e0b); width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #111; font-weight: 900; font-size: 1.2rem;">
+            👑
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h1 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0;">بوابة صاحب الصالون المستقلة</h1>
+              <span class="badge-owner">🔒 رابط خاص منفصل</span>
+            </div>
+            <p style="font-size: 0.78rem; color: #9ca3af; margin: 0;">صالون المقص الذهبي - بن فريحة، وهران</p>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <a href="./index.html" class="action-pill-btn" target="_blank" title="فتح الموقع الرئيسي للزبائن">
+            <span>🌐 موقع الزبائن</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+          <a href="./barber.html" class="action-pill-btn" target="_blank" title="فتح بوابة الحلاقين">
+            <span>💈 بوابة الحلاقين</span>
+          </a>
+          <button type="button" id="owner-logout-btn" class="action-pill-btn" style="color: #ef4444; border-color: rgba(239,68,68,0.3); display: none;">
+            <span>🚪 خروج</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container" style="padding-top: 24px; padding-bottom: 60px; max-width: 1300px;">
+
+      <!-- LOGIN VIEW (Shown if owner not verified) -->
+      <section id="owner-login-view" style="max-width: 460px; margin: 50px auto 30px; display: block;">
+        <div style="background: #141722; border: 1px solid #2d3244; border-radius: 20px; padding: 32px 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); text-align: center;">
+          <div style="width: 72px; height: 72px; background: rgba(245,158,11,0.1); border: 2px solid #f59e0b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 18px; color: #f59e0b;">
+            🔐
+          </div>
+          <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 8px;">دخول صاحب المحل</h2>
+          <p style="font-size: 0.88rem; color: #9ca3af; line-height: 1.5; margin-bottom: 24px;">
+            هذه الصفحة مخصصة لمالك صالون المقص الذهبي فقط. يرجى إدخال معلومات الدخول.
+          </p>
+
+          <form id="owner-pin-form">
+            <div style="margin-bottom: 14px; text-align: right;">
+              <label for="owner-email-input" style="display: block; font-size: 0.85rem; font-weight: 700; color: #e4e4e7; margin-bottom: 6px;">
+                البريد الإلكتروني (Email):
+              </label>
+              <input 
+                type="email" 
+                id="owner-email-input" 
+                class="form-control" 
+                value="wahablila31000@gmail.com"
+                placeholder="wahablila31000@gmail.com"
+                style="width: 100%; height: 48px; background: #0b0d13; border: 1.5px solid #333a50; border-radius: 12px; color: #38bdf8; font-size: 1rem; padding: 0 16px; direction: ltr; text-align: left;"
+                autocomplete="email"
+                required
+              >
+            </div>
+
+            <div style="margin-bottom: 18px; text-align: right;">
+              <label for="owner-password-input" style="display: block; font-size: 0.85rem; font-weight: 700; color: #e4e4e7; margin-bottom: 6px;">
+                كلمة المرور (Mot de passe):
+              </label>
+              <div style="position: relative;">
+                <input 
+                  type="password" 
+                  id="owner-password-input" 
+                  class="form-control" 
+                  placeholder="أدخل كلمة المرور..."
+                  style="width: 100%; height: 48px; background: #0b0d13; border: 1.5px solid #333a50; border-radius: 12px; color: #fff; font-size: 1rem; padding: 0 16px; text-align: right;"
+                  autocomplete="current-password"
+                  required
+                >
+                <button 
+                  type="button" 
+                  id="toggle-pin-visibility" 
+                  style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer; padding: 4px;"
+                  title="إظهار / إخفاء كلمة المرور"
+                >
+                  👁️
+                </button>
+              </div>
+            </div>
+
+            <div style="background: rgba(245,158,11,0.08); border: 1px dashed rgba(245,158,11,0.3); border-radius: 10px; padding: 10px 14px; margin-bottom: 20px; font-size: 0.82rem; color: #fbbf24; text-align: right;">
+              💡 <strong>البريد المعتمد:</strong> <code style="background: #232838; padding: 2px 6px; border-radius: 4px; color: #38bdf8;">wahablila31000@gmail.com</code><br>
+              🔑 <strong>كلمة المرور الافتراضية:</strong> <code style="background: #232838; padding: 2px 6px; border-radius: 4px; color: #38bdf8;">admin2026</code> (يمكنك تغييرها في أي وقت من الإعدادات).
+            </div>
+
+            <button type="submit" class="btn-primary w-full" style="height: 50px; font-size: 1rem; font-weight: 800; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+              <span>🔓 دخول لوحة التحكم</span>
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- AUTHENTICATED DASHBOARD (Hidden until logged in) -->
+      <section id="owner-dashboard-view" style="display: none;">
+
+        <!-- Cloud Databases Status Banner -->
+        <div style="background: linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(59,130,246,0.12) 100%); border: 1px solid rgba(16,185,129,0.4); border-radius: 14px; padding: 14px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 1.6rem;">⚡</span>
+            <div>
+              <div style="font-size: 0.95rem; font-weight: 800; color: #34d399; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span>قاعدة بيانات Supabase الحقيقية متصلة ومفعلة</span>
+                <span style="background: rgba(16,185,129,0.25); color: #6ee7b7; font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; border: 1px solid rgba(16,185,129,0.4);">Supabase Connected</span>
+                <span style="background: rgba(245,158,11,0.2); color: #fbbf24; font-size: 0.72rem; padding: 2px 8px; border-radius: 9999px; border: 1px solid rgba(245,158,11,0.4);">Firebase RTDB Sync</span>
+              </div>
+              <p style="font-size: 0.8rem; color: #9ca3af; margin: 4px 0 0;">
+                المشروع: <code style="color: #38bdf8; font-family: monospace;">vmhhriytxjeikorzoqcs</code> (Supabase) + <code style="color: #fbbf24; font-family: monospace;">ykin-1241b</code> (Firebase) — كافة الحجوزات والحلاقين والإعلانات حقيقية وتُحفظ لحظياً.
+              </p>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button type="button" onclick="copySupabaseSql()" class="action-pill-btn" style="background: #102a1e; color: #34d399; border-color: rgba(52,211,153,0.4); font-weight: 700;">
+              📋 نسخ كود SQL لـ Supabase
+            </button>
+          </div>
+        </div>
+
+        <!-- Standalone Links Notice Card -->
+        <div style="background: linear-gradient(135deg, #161924 0%, #1c2130 100%); border: 1px solid rgba(245,158,11,0.3); border-radius: 16px; padding: 20px 24px; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.6rem;">🔗</span>
+              <div>
+                <h2 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0;">روابط المنظومة المستقلة</h2>
+                <p style="font-size: 0.82rem; color: #9ca3af; margin: 0;">احتفظ بهذه الروابط لديك لمشاركتها مع الحلاقين أو استخدامها مستقبلاً</p>
+              </div>
+            </div>
+            <button type="button" id="copy-all-links-btn" class="action-pill-btn" style="background: #23293c; border-color: #f59e0b; color: #fbbf24;">
+              📋 نسخ كل الروابط معاً
+            </button>
+          </div>
+
+          <div class="url-copy-box">
+            <div>
+              <div style="font-size: 0.85rem; font-weight: 700; color: #f4f4f5; margin-bottom: 2px;">
+                👑 1. رابط لوحة صاحب الموقع (هذه الصفحة المستقلة):
+              </div>
+              <div class="url-text" id="owner-page-url">--</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="action-pill-btn" onclick="copySpecificUrl('owner-page-url')">نسخ الرابط</button>
+            </div>
+          </div>
+
+          <div class="url-copy-box">
+            <div>
+              <div style="font-size: 0.85rem; font-weight: 700; color: #f4f4f5; margin-bottom: 2px;">
+                💈 2. رابط بوابة الحلاقين (أرسله للحلاقين الـ ٣ لدخول حساباتهم):
+              </div>
+              <div class="url-text" id="barber-portal-url">--</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="action-pill-btn" onclick="copySpecificUrl('barber-portal-url')">نسخ الرابط</button>
+              <a href="./barber.html" target="_blank" class="action-pill-btn">فتح</a>
+            </div>
+          </div>
+
+          <div class="url-copy-box" style="margin-bottom: 0;">
+            <div>
+              <div style="font-size: 0.85rem; font-weight: 700; color: #f4f4f5; margin-bottom: 2px;">
+                🌐 3. رابط موقع الزبائن العام (لحجز المواعيد في بن فريحة):
+              </div>
+              <div class="url-text" id="client-site-url">--</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="action-pill-btn" onclick="copySpecificUrl('client-site-url')">نسخ الرابط</button>
+              <a href="./index.html" target="_blank" class="action-pill-btn">فتح الموقع</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Metrics & Visitor Counter Bar -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 28px;">
+          <!-- Visitors -->
+          <div style="background: #141722; border: 1px solid #282d3e; border-radius: 14px; padding: 18px; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <span style="font-size: 0.8rem; color: #9ca3af; font-weight: 600;">👀 عدد زوار الموقع المباشر</span>
+                <div id="metric-visitors" style="font-size: 1.9rem; font-weight: 900; color: #38bdf8; margin: 4px 0;">0</div>
+                <span style="font-size: 0.72rem; color: #6b7280;">زيارات حقيقية للموقع</span>
+              </div>
+              <button type="button" id="btn-edit-visitors" class="action-pill-btn" style="padding: 4px 8px; font-size: 0.72rem;" title="تعديل أو تصفير العداد">
+                تعديل ⚙️
+              </button>
+            </div>
+          </div>
+
+          <!-- Total Appointments -->
+          <div style="background: #141722; border: 1px solid #282d3e; border-radius: 14px; padding: 18px;">
+            <span style="font-size: 0.8rem; color: #9ca3af; font-weight: 600;">📅 إجمالي الحجوزات</span>
+            <div id="metric-total-appts" style="font-size: 1.9rem; font-weight: 900; color: #f4f4f5; margin: 4px 0;">0</div>
+            <span style="font-size: 0.72rem; color: #6b7280;">مواعيد مسجلة في النظام</span>
+          </div>
+
+          <!-- Accepted Appointments -->
+          <div style="background: #141722; border: 1px solid rgba(16,185,129,0.3); border-radius: 14px; padding: 18px;">
+            <span style="font-size: 0.8rem; color: #34d399; font-weight: 600;">✅ المواعيد المقبولة</span>
+            <div id="metric-accepted-appts" style="font-size: 1.9rem; font-weight: 900; color: #10b981; margin: 4px 0;">0</div>
+            <span style="font-size: 0.72rem; color: #6b7280;">وافق عليها الحلاقون</span>
+          </div>
+
+          <!-- Pending Appointments -->
+          <div style="background: #141722; border: 1px solid rgba(245,158,11,0.3); border-radius: 14px; padding: 18px;">
+            <span style="font-size: 0.8rem; color: #fbbf24; font-weight: 600;">⏳ قيد الانتظار</span>
+            <div id="metric-pending-appts" style="font-size: 1.9rem; font-weight: 900; color: #f59e0b; margin: 4px 0;">0</div>
+            <span style="font-size: 0.72rem; color: #6b7280;">تنتظر قرار الحلاق</span>
+          </div>
+
+          <!-- Est. Revenue -->
+          <div style="background: #141722; border: 1px solid #282d3e; border-radius: 14px; padding: 18px;">
+            <span style="font-size: 0.8rem; color: #9ca3af; font-weight: 600;">💰 المداخيل المتوقعة</span>
+            <div id="metric-revenue" style="font-size: 1.9rem; font-weight: 900; color: #fcd34d; margin: 4px 0;">0 دج</div>
+            <span style="font-size: 0.72rem; color: #6b7280;">للحجوزات المقبولة</span>
+          </div>
+        </div>
+
+        <!-- Dashboard Navigation Tabs -->
+        <div class="owner-tab-nav">
+          <button type="button" class="owner-tab-btn active" data-tab="tab-barbers">
+            <span>✂️ الحلاقين وبيانات الدخول</span>
+          </button>
+          <button type="button" class="owner-tab-btn" data-tab="tab-ads">
+            <span>📢 إدارة الإعلانات بكود HTML</span>
+          </button>
+          <button type="button" class="owner-tab-btn" data-tab="tab-appointments">
+            <span>📋 سجل ومراقبة المواعيد</span>
+          </button>
+          <button type="button" class="owner-tab-btn" data-tab="tab-settings">
+            <span>⚙️ إعدادات الأمان والرمز السري</span>
+          </button>
+        </div>
+
+        <!-- TAB 1: BARBERS & CREDENTIALS -->
+        <div id="tab-barbers" class="owner-tab-panel" style="display: block;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 20px;">
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 4px;">بيانات دخول الحلاقين (٣ حلاقين)</h2>
+              <p style="font-size: 0.85rem; color: #9ca3af;">يمكنك الاطلاع على اسم الدخول وكلمة السر لكل حلاق، أو نسخها وإرسالها له عبر واتساب مباشرة.</p>
+            </div>
+            <button type="button" id="btn-add-barber-modal" class="btn-primary" style="padding: 10px 18px; border-radius: 10px; font-size: 0.88rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+              <span>➕ إضافة حلاق جديد</span>
+            </button>
+          </div>
+
+          <!-- Barbers Grid -->
+          <div id="barbers-credentials-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 18px;">
+            <!-- Rendered dynamically by owner.js -->
+          </div>
+        </div>
+
+        <!-- TAB 2: HTML ADS MANAGER -->
+        <div id="tab-ads" class="owner-tab-panel" style="display: none;">
+          <div style="margin-bottom: 20px;">
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 4px;">إدارة المساحات الإعلانية المخصصة (HTML)</h2>
+            <p style="font-size: 0.85rem; color: #9ca3af;">
+              الصق أي كود HTML تريده (مثل إعلانات Google AdSense، بنرات ترويجية، صور، عروض خاصة، أو روابط شركاء). سيظهر الإعلان فوراً في الموقع للزبائن دون تعديل أي ملفات!
+            </p>
+          </div>
+
+          <form id="owner-ads-form">
+            <!-- Ad Slot 1: Top Header -->
+            <div class="ad-editor-box">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="background: rgba(245,158,11,0.2); color: #fbbf24; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.82rem;">مساحة 1</span>
+                  <h4 style="color: #fff; font-size: 1.05rem; margin: 0;">إعلان أعلى الموقع (Top Header Banner)</h4>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <button type="button" class="action-pill-btn" onclick="insertAdTemplate('header', 'discount')">إدراج نموذج عرض تخفيض</button>
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e4e4e7; font-size: 0.85rem; font-weight: 600;">
+                    <input type="checkbox" id="ad-header-enabled" style="accent-color: #f59e0b; width: 18px; height: 18px;">
+                    <span>تفعيل هذه المساحة</span>
+                  </label>
+                </div>
+              </div>
+              <p style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 8px;">يظهر مباشرة تحت شريط التنقل العلوي في كل الصفحات.</p>
+              <textarea id="ad-header-html" class="html-code-area" placeholder="الصق كود HTML هنا (مثل: <div class='banner'>...</div>)"></textarea>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                <span style="font-size: 0.78rem; color: #9ca3af;">👁️ المعاينة الحية:</span>
+                <button type="button" class="action-pill-btn" style="font-size: 0.75rem; padding: 3px 8px;" onclick="refreshAdPreview('header')">تحديث المعاينة</button>
+              </div>
+              <div id="preview-ad-header" class="ad-preview-container"></div>
+            </div>
+
+            <!-- Ad Slot 2: Middle Content -->
+            <div class="ad-editor-box">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="background: rgba(56,189,248,0.2); color: #38bdf8; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.82rem;">مساحة 2</span>
+                  <h4 style="color: #fff; font-size: 1.05rem; margin: 0;">إعلان منتصف الموقع (Middle Content Banner)</h4>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <button type="button" class="action-pill-btn" onclick="insertAdTemplate('middle', 'sponsor')">إدراج نموذج راعي رسمي</button>
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e4e4e7; font-size: 0.85rem; font-weight: 600;">
+                    <input type="checkbox" id="ad-middle-enabled" style="accent-color: #f59e0b; width: 18px; height: 18px;">
+                    <span>تفعيل هذه المساحة</span>
+                  </label>
+                </div>
+              </div>
+              <p style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 8px;">يظهر بين قسم الحلاقين وقسم الخدمات والأسعار.</p>
+              <textarea id="ad-middle-html" class="html-code-area" placeholder="الصق كود HTML هنا"></textarea>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                <span style="font-size: 0.78rem; color: #9ca3af;">👁️ المعاينة الحية:</span>
+                <button type="button" class="action-pill-btn" style="font-size: 0.75rem; padding: 3px 8px;" onclick="refreshAdPreview('middle')">تحديث المعاينة</button>
+              </div>
+              <div id="preview-ad-middle" class="ad-preview-container"></div>
+            </div>
+
+            <!-- Ad Slot 3: Footer Banner -->
+            <div class="ad-editor-box">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="background: rgba(16,185,129,0.2); color: #34d399; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.82rem;">مساحة 3</span>
+                  <h4 style="color: #fff; font-size: 1.05rem; margin: 0;">إعلان أسفل الموقع (Footer Banner)</h4>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <button type="button" class="action-pill-btn" onclick="insertAdTemplate('footer', 'location')">إدراج نموذج ترويج موقع المحل</button>
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e4e4e7; font-size: 0.85rem; font-weight: 600;">
+                    <input type="checkbox" id="ad-footer-enabled" style="accent-color: #f59e0b; width: 18px; height: 18px;">
+                    <span>تفعيل هذه المساحة</span>
+                  </label>
+                </div>
+              </div>
+              <p style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 8px;">يظهر قبل الفوتر الرئيسي وخريطة بن فريحة بوهران.</p>
+              <textarea id="ad-footer-html" class="html-code-area" placeholder="الصق كود HTML هنا"></textarea>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                <span style="font-size: 0.78rem; color: #9ca3af;">👁️ المعاينة الحية:</span>
+                <button type="button" class="action-pill-btn" style="font-size: 0.75rem; padding: 3px 8px;" onclick="refreshAdPreview('footer')">تحديث المعاينة</button>
+              </div>
+              <div id="preview-ad-footer" class="ad-preview-container"></div>
+            </div>
+
+            <!-- Save Ads Button -->
+            <div style="position: sticky; bottom: 20px; background: rgba(18, 20, 28, 0.95); border: 1px solid #2f3549; padding: 16px 20px; border-radius: 14px; backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+              <div>
+                <span style="font-weight: 700; color: #fff;">جاهز لنشر الإعلانات؟</span>
+                <p style="font-size: 0.8rem; color: #9ca3af; margin: 0;">يتم حفظ الأكواد وتطبيقها فوراً على موقع الزبائن في المتصفح.</p>
+              </div>
+              <button type="submit" class="btn-primary" style="padding: 12px 28px; font-size: 1rem; font-weight: 800; border-radius: 10px;">
+                💾 حفظ ونشر جميع الإعلانات الآن
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB 3: ALL APPOINTMENTS OVERSIGHT -->
+        <div id="tab-appointments" class="owner-tab-panel" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 20px;">
+            <div>
+              <h2 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 4px;">مراقبة وإدارة جميع مواعيد الصالون</h2>
+              <p style="font-size: 0.85rem; color: #9ca3af;">يمكن لصاحب المحل الاطلاع على حجوزات كل الحلاقين، والتدخل بقبول أو إلغاء أو تتبع أي موعد.</p>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <select id="filter-appt-barber" class="form-control" style="background: #141722; border: 1px solid #2d3345; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;">
+                <option value="all">كل الحلاقين</option>
+                <!-- Populated dynamically -->
+              </select>
+              <select id="filter-appt-status" class="form-control" style="background: #141722; border: 1px solid #2d3345; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem;">
+                <option value="all">كل الحالات</option>
+                <option value="pending">قيد الانتظار</option>
+                <option value="accepted">مقبولة</option>
+                <option value="rejected">مرفوضة / ملغية</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive" style="background: #12141c; border: 1px solid #232734; border-radius: 14px; overflow: hidden;">
+            <table class="data-table" id="all-appointments-table">
+              <thead>
+                <tr>
+                  <th>رقم الحجز</th>
+                  <th>الحلاق المسؤول</th>
+                  <th>اسم الزبون</th>
+                  <th>رقم الهاتف</th>
+                  <th>الخدمة المطلوبة</th>
+                  <th>التاريخ والوقت</th>
+                  <th>السعر</th>
+                  <th>الحالة</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="all-appointments-tbody">
+                <!-- Dynamically generated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 4: OWNER SECURITY & SETTINGS -->
+        <div id="tab-settings" class="owner-tab-panel" style="display: none;">
+          <div style="max-width: 650px;">
+            <div style="background: #141722; border: 1px solid #2b3042; border-radius: 16px; padding: 24px; margin-bottom: 24px;">
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin-bottom: 8px;">🔐 تغيير الرمز السري للمالك (PIN)</h3>
+              <p style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 18px;">
+                احرص على استخدام رمز سري قوي لا يشاركه أحد معك لحماية بيانات الدخول والأرباح.
+              </p>
+
+              <form id="change-pin-form">
+                <div style="margin-bottom: 14px;">
+                  <label style="display: block; font-size: 0.85rem; color: #e4e4e7; margin-bottom: 6px; font-weight: 600;">الرمز السري الحالي:</label>
+                  <input type="password" id="current-pin-input" class="form-control" style="width: 100%; background: #0c0e14; border: 1px solid #2c3245; color: #fff; padding: 10px 14px; border-radius: 8px;" required>
+                </div>
+                <div style="margin-bottom: 18px;">
+                  <label style="display: block; font-size: 0.85rem; color: #e4e4e7; margin-bottom: 6px; font-weight: 600;">الرمز السري الجديد:</label>
+                  <input type="password" id="new-pin-input" class="form-control" style="width: 100%; background: #0c0e14; border: 1px solid #2c3245; color: #fff; padding: 10px 14px; border-radius: 8px;" minlength="4" required>
+                </div>
+                <button type="submit" class="btn-primary" style="padding: 10px 20px; font-weight: 700; border-radius: 8px;">
+                  تحديث الرمز السري 🔒
+                </button>
+              </form>
+            </div>
+
+            <!-- Manage Visitors Counter -->
+            <div style="background: #141722; border: 1px solid #2b3042; border-radius: 16px; padding: 24px; margin-bottom: 24px;">
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin-bottom: 8px;">📊 التحكم في عداد الزوار</h3>
+              <p style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 18px;">
+                يمكنك ضبط رقم عداد الزوار المعروض أو تصفيره في أي وقت.
+              </p>
+              <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <input type="number" id="manual-visitors-count" class="form-control" style="background: #0c0e14; border: 1px solid #2c3245; color: #fff; padding: 10px 14px; border-radius: 8px; width: 140px;" min="0">
+                <button type="button" id="save-visitors-btn" class="action-pill-btn" style="background: #23293c; border-color: #38bdf8; color: #38bdf8; padding: 10px 18px;">
+                  حفظ القيمة الجديدة
+                </button>
+                <button type="button" id="reset-visitors-btn" class="action-pill-btn" style="color: #ef4444; border-color: rgba(239,68,68,0.4); padding: 10px 18px;">
+                  تصفير العداد إلى 0
+                </button>
+              </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div style="background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.3); border-radius: 16px; padding: 20px;">
+              <h3 style="font-size: 1rem; font-weight: 800; color: #f87171; margin-bottom: 6px;">⚠️ منطقة الخطر</h3>
+              <p style="font-size: 0.82rem; color: #9ca3af; margin-bottom: 14px;">
+                استعادة الإعدادات الأولية وإعادة شحن الحلاقين الثلاثة الافتراضيين (كريم، يوسف، سامي) في حال حدوث أي خطأ في البيانات.
+              </p>
+              <button type="button" id="btn-reset-defaults" class="action-pill-btn" style="border-color: #ef4444; color: #ef4444;">
+                إعادة ضبط البيانات الافتراضية
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- Modal: Add New Barber -->
+    <div id="modal-add-barber" class="modal-backdrop">
+      <div class="modal-dialog" style="max-width: 500px;">
+        <div class="modal-header">
+          <h3 class="modal-title">➕ إضافة حلاق جديد إلى الصالون</h3>
+          <button type="button" class="modal-close-btn" onclick="closeModal('#modal-add-barber')">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="form-add-barber">
+            <div style="margin-bottom: 12px;">
+              <label style="display: block; font-size: 0.82rem; color: #e4e4e7; margin-bottom: 4px;">الاسم الكامل للحلاق *</label>
+              <input type="text" id="add-barber-name" class="form-control" placeholder="مثال: أمين السعيدي" required style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #fff; padding: 8px 12px; border-radius: 8px;">
+            </div>
+            <div style="margin-bottom: 12px;">
+              <label style="display: block; font-size: 0.82rem; color: #e4e4e7; margin-bottom: 4px;">التخصص والخبرة *</label>
+              <input type="text" id="add-barber-role" class="form-control" placeholder="مثال: متخصص قصات عصرية وتصفيف اللحية" required style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #fff; padding: 8px 12px; border-radius: 8px;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+              <div>
+                <label style="display: block; font-size: 0.82rem; color: #e4e4e7; margin-bottom: 4px;">رقم هاتف الحلاق *</label>
+                <input type="tel" id="add-barber-phone" class="form-control" placeholder="0555 00 11 22" required style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #fff; padding: 8px 12px; border-radius: 8px;">
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.82rem; color: #e4e4e7; margin-bottom: 4px;">سنوات الخبرة</label>
+                <input type="text" id="add-barber-exp" class="form-control" placeholder="مثال: 5 سنوات" style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #fff; padding: 8px 12px; border-radius: 8px;">
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+              <div>
+                <label style="display: block; font-size: 0.82rem; color: #fbbf24; margin-bottom: 4px;">اسم الدخول (Username) *</label>
+                <input type="text" id="add-barber-username" class="form-control" placeholder="amin" required style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #38bdf8; font-family: monospace; padding: 8px 12px; border-radius: 8px;">
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.82rem; color: #fbbf24; margin-bottom: 4px;">كلمة السر (Password) *</label>
+                <input type="text" id="add-barber-password" class="form-control" placeholder="amin123" required style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #38bdf8; font-family: monospace; padding: 8px 12px; border-radius: 8px;">
+              </div>
+            </div>
+            <div style="margin-bottom: 16px;">
+              <label style="display: block; font-size: 0.82rem; color: #e4e4e7; margin-bottom: 4px;">رابط الصورة (اختياري)</label>
+              <input type="url" id="add-barber-image" class="form-control" placeholder="https://..." style="width: 100%; background: #0c0e14; border: 1px solid #2d3345; color: #fff; padding: 8px 12px; border-radius: 8px;">
+            </div>
+            <button type="submit" class="btn-primary w-full" style="padding: 10px; font-weight: 700; border-radius: 8px;">
+              حفظ وإضافة الحلاق فوراً
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <script type="module" src="./owner.js"></script>
+  </body>
+</html>
